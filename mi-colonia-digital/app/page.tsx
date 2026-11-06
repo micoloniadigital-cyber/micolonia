@@ -12,6 +12,7 @@ import {
   getCatalog,
   recentBusinesses,
 } from "../lib/catalogo";
+import { CategoryIcon } from "../lib/iconos";
 import {
   CATEGORIES,
   COLONIAS,
@@ -40,6 +41,17 @@ export default async function HomePage() {
   return (
     <main>
       <section className="hero">
+        <div
+          aria-hidden="true"
+          style={{
+            height: 14,
+            borderRadius: 999,
+            marginBottom: 18,
+            background:
+              "repeating-linear-gradient(90deg, #ea580c 0 36px, #fff9f0 36px 72px, #1d4ed8 72px 108px, #16a34a 108px 144px)",
+            border: "1px solid #ede6da",
+          }}
+        />
         <h1>Todo lo que necesitas, cerca de ti</h1>
         <p>
           Descubre los mejores negocios de tu colonia, consulta sus
@@ -65,7 +77,12 @@ export default async function HomePage() {
         <ul className="grid-categorias">
           {CATEGORIES.map((c) => (
             <li key={c}>
-              <Link href={"/catalogo?categoria=" + encodeURIComponent(c)}>{c}</Link>
+              <Link href={"/catalogo?categoria=" + encodeURIComponent(c)}>
+                <span style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+                  <CategoryIcon categoria={c} />
+                  {c}
+                </span>
+              </Link>
             </li>
           ))}
         </ul>
