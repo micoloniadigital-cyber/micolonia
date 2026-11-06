@@ -8,6 +8,7 @@ import {
   SITE_URL,
 } from "../lib/plataforma";
 import "./globals.css";
+import { FacebookIcon, InstagramIcon, LogoIcon } from "../lib/iconos";
 
 export const metadata: Metadata = {
   title: "Mi Colonia Digital — Todo lo que necesitas, cerca de ti",
@@ -25,7 +26,8 @@ export default function RootLayout({
     <html lang="es">
       <body>
         <header className="encabezado">
-          <Link href="/" className="marca">
+          <Link href="/" className="marca" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+            <LogoIcon size={30} />
             Mi Colonia Digital
           </Link>
           <nav aria-label="Navegación principal">
@@ -39,12 +41,12 @@ export default function RootLayout({
         <footer className="pie">
           <p>Redes oficiales de Mi Colonia Digital</p>
           <p>
-            <a href={OFFICIAL_FACEBOOK} target="_blank" rel="noreferrer">
-              Facebook
+            <a href={OFFICIAL_FACEBOOK} target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <FacebookIcon size={18} /> Facebook
             </a>{" "}
             ·{" "}
-            <a href={OFFICIAL_INSTAGRAM} target="_blank" rel="noreferrer">
-              Instagram — @micoloniadigital2026
+            <a href={OFFICIAL_INSTAGRAM} target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <InstagramIcon size={18} /> Instagram — @micoloniadigital2026
             </a>
           </p>
           <p className="tenue">
