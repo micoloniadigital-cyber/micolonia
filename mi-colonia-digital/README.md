@@ -28,7 +28,15 @@ dominio en HostGator.
   Supabase (navegador y servidor), contraseñas (`auth.ts`), sesión
   firmada (`sesion.ts`), catálogo (`catalogo.ts`), carrito
   (`carrito.ts`) y correo de códigos (`correo.ts`).
-- `components/` — tarjeta de negocio, botón de carrito y carrito.
+- `components/` — encabezado, pie y barra móvil idénticos al
+  demo, tarjetas de negocio y de producto, catálogo interactivo,
+  carrito, iconos oficiales de redes (`SocialIcons.tsx`) e
+  iconos de las 10 categorías (`CategoryIcon.tsx`).
+- `public/fotos/` y `public/logo.webp` — LAS FOTOS REALES del
+  demo: la foto del barrio del héroe, una foto por categoría
+  (tacos, café, panadería, belleza, farmacia…) y el logo
+  oficial. La portada usa Tailwind CSS v4 con la fuente Sora:
+  el diseño es EXACTAMENTE el del demo que Mario aprobó.
 - `supabase/schema.sql` — tablas, índices, RLS y bucket de fotos.
 - `.env.example` — plantilla de variables (la clave secreta va
   solo como marcador: su valor real vive en Vercel).

@@ -1,0 +1,16 @@
+# dependencias
+/node_modules
+
+# compilación de Next.js
+/.next
+/out
+
+# variables reales (las de Vercel se pegan en su panel;
+# en local copia .env.example como .env.local y llena los
+# valores ahí — NUNCA subas tu clave secreta a GitHub)
+.env*.local
+.env
+
+# sistema
+.DS_Store
+*.log

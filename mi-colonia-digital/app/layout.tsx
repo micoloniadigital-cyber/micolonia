@@ -1,14 +1,14 @@
-// app/layout.tsx — marco de todas las páginas: encabezado con
-// navegación y pie con las redes oficiales de la plataforma.
+// app/layout.tsx — marco de todas las páginas, IGUAL al
+// demo: encabezado fijo con logo, buscador y carrito
+// (components/Header), pie con las redes oficiales
+// (components/Footer) y barra inferior en celular
+// (components/MobileNav).
 import type { Metadata } from "next";
-import Link from "next/link";
-import {
-  OFFICIAL_FACEBOOK,
-  OFFICIAL_INSTAGRAM,
-  SITE_URL,
-} from "../lib/plataforma";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+import MobileNav from "../components/MobileNav";
+import { SITE_URL } from "../lib/plataforma";
 import "./globals.css";
-import { FacebookIcon, InstagramIcon, LogoIcon } from "../lib/iconos";
 
 export const metadata: Metadata = {
   title: "Mi Colonia Digital — Todo lo que necesitas, cerca de ti",
@@ -25,34 +25,10 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body>
-        <header className="encabezado">
-          <Link href="/" className="marca" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-            <LogoIcon size={30} />
-            Mi Colonia Digital
-          </Link>
-          <nav aria-label="Navegación principal">
-            <Link href="/catalogo">Explorar negocios</Link>
-            <Link href="/carrito">Mi carrito</Link>
-            <Link href="/registro">Publica tu negocio</Link>
-            <Link href="/ingresar">Iniciar sesión</Link>
-          </nav>
-        </header>
+        <Header />
         {children}
-        <footer className="pie">
-          <p>Redes oficiales de Mi Colonia Digital</p>
-          <p>
-            <a href={OFFICIAL_FACEBOOK} target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-              <FacebookIcon size={18} /> Facebook
-            </a>{" "}
-            ·{" "}
-            <a href={OFFICIAL_INSTAGRAM} target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-              <InstagramIcon size={18} /> Instagram — @micoloniadigital2026
-            </a>
-          </p>
-          <p className="tenue">
-            Los pedidos se hacen directo con cada negocio por WhatsApp.
-          </p>
-        </footer>
+        <Footer />
+        <MobileNav />
       </body>
     </html>
   );

@@ -63,7 +63,8 @@ export interface Business {
   openTime: string; // "09:00"
   closeTime: string; // "21:00"
   daysLabel: string;
-  coverUrl: string; // URL pública del bucket fotos-negocios
+  coverUrl: string; // portada SUBIDA por el negocio (bucket); "" si no subió
+  coverKey: string; // clave de la galería del demo (lib/fotos.ts)
   logoUrl: string;
   emailVerified: boolean;
   accent: string;
@@ -86,7 +87,8 @@ export interface Product {
   price: number;
   promoPrice: number | null;
   category: string;
-  imageUrl: string;
+  imageUrl: string; // foto SUBIDA (bucket); "" si no subió
+  imageKey: string; // clave de la galería del demo (lib/fotos.ts)
   available: boolean;
   featured: boolean;
   views: number;

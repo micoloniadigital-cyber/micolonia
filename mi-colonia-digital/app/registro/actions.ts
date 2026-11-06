@@ -5,6 +5,12 @@
 // 5 intentos), 3) sin escribir el código NO hay acceso al
 // panel, 4) el negocio queda «pendiente»: Mario cobra los
 // $259 en persona y lo activa desde su panel.
+// OJO: un archivo "use server" SOLO puede exportar funciones
+// async (y tipos). Nada de re-exportar constantes como
+// MONTHLY_PRICE: Next.js lo rechaza en tiempo de ejecución
+// («A "use server" file can only export async functions»)
+// y el registro se cae. El precio se importa directo de
+// lib/plataforma en la página, nunca desde aquí.
 "use server";
 
 import { redirect } from "next/navigation";

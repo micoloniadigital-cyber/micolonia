@@ -45,6 +45,23 @@ export function addToCart(
   return items;
 }
 
+export function cartQtyOf(productId: number): number {
+  const found = loadCart().find((i) => i.productId === productId);
+  return found ? found.qty : 0;
+}
+
+export function cartCount(): number {
+  return loadCart().reduce((s, i) => s + i.qty, 0);
+}
+
+export function removeFromCart(productId: number): CartItem[] {
+  const items = loadCart()
+    .map((i) => (i.productId === productId ? { ...i, qty: i.qty - 1 } : i))
+    .filter((i) => i.qty > 0);
+  saveCart(items);
+  return items;
+}
+
 export function whatsappOrderLink(items: CartItem[]): string {
   const first = items[0];
   if (!first) return "#";

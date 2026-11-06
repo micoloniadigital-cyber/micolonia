@@ -14,6 +14,9 @@ Adentro viene el PROYECTO COMPLETO, ya acomodado en carpetas:
                            negocio/[slug], carrito, registro,
                            ingresar, panel, admin, sitemap.ts)
   lib/ y components/      (todo el código de la plataforma)
+  public/                 (EL LOGO Y LAS FOTOS REALES del demo:
+                           la foto del barrio y una por categoría;
+                           SIN esta carpeta la página se ve simple)
   supabase/schema.sql     (la base de datos)
   .env.example            (la plantilla de variables)
   pasos-para-desplegar.txt (este archivo)
@@ -36,7 +39,9 @@ PASO 1 — Crear el repositorio en GitHub (guarda el código)
    dice «uploading an existing file».
 7. Arrastra TODOS los archivos y carpetas de adentro de la
    carpeta descomprimida (package.json, app, lib, components,
-   supabase, .env.example, etc.). GitHub conserva las carpetas
+   public, supabase, .env.example, etc.). La carpeta public/
+   trae el logo y las fotos del demo: NO la dejes fuera, sin
+   ella la página se ve sin fotos. GitHub conserva las carpetas
    tal cual: eso es lo que Vercel necesita para importar.
    OJO: el archivo .env.example SÍ se sube (no trae secretos,
    la secreta va solo como marcador).
