@@ -15,7 +15,7 @@ import {
   newVerificationCode,
 } from "../../lib/auth";
 import { enviarCodigoPorCorreo } from "../../lib/correo";
-import { MONTHLY_PRICE, slugify } from "../../lib/plataforma";
+import { slugify } from "../../lib/plataforma";
 import { crearSesion } from "../../lib/sesion";
 import { supabaseServer } from "../../lib/supabase-server";
 
@@ -193,5 +193,3 @@ export async function reenviarCodigo(fd: FormData): Promise<void> {
     biz.data ? String((biz.data as { name: string }).name) : "tu negocio",
   );
 }
-
-export { MONTHLY_PRICE };
