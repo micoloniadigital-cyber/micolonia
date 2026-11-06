@@ -1,0 +1,149 @@
+MI COLONIA DIGITAL — PASOS PARA DESPLEGAR EN micoloniadigital.com
+==================================================================
+En palabras simples: GitHub guarda el código, Supabase guarda los
+datos, Vercel muestra la página y HostGator solo presta el nombre
+(el dominio). Sigue los pasos en orden, sin saltarte ninguno.
+
+ANTES DE EMPEZAR — el paquete es UN SOLO ARCHIVO ZIP:
+  mi-colonia-digital-proyecto.zip
+Adentro viene el PROYECTO COMPLETO, ya acomodado en carpetas:
+  package.json            (lo que Vercel lee para saber que es
+                           un proyecto Next.js y qué instalar)
+  next.config.mjs, tsconfig.json, next-env.d.ts, .gitignore
+  app/                    (las páginas: portada, catalogo,
+                           negocio/[slug], carrito, registro,
+                           ingresar, panel, admin, sitemap.ts)
+  lib/ y components/      (todo el código de la plataforma)
+  supabase/schema.sql     (la base de datos)
+  .env.example            (la plantilla de variables)
+  pasos-para-desplegar.txt (este archivo)
+NO es un archivo suelto: es el proyecto entero. Por eso el
+primer paso es DESCOMPRIMIR el ZIP (doble clic o clic derecho
+→ «Extraer todo») y subir la CARPETA completa, sin mover ni
+renombrar nada de adentro.
+
+PASO 1 — Crear el repositorio en GitHub (guarda el código)
+----------------------------------------------------------
+1. Descomprime mi-colonia-digital-proyecto.zip en tu compu.
+   Debe quedarte una carpeta «mi-colonia-digital» con todo
+   adentro (package.json, app, lib, components, supabase...).
+2. Entra a github.com y crea tu cuenta si no tienes, o inicia sesión.
+3. Arriba a la derecha aprieta el botón «+» y luego «New repository».
+4. En «Repository name» escribe: mi-colonia-digital
+5. Déjalo en «Private» (privado es más seguro) y aprieta el
+   botón verde «Create repository».
+6. En la pantalla del repositorio vacío, aprieta el enlace que
+   dice «uploading an existing file».
+7. Arrastra TODOS los archivos y carpetas de adentro de la
+   carpeta descomprimida (package.json, app, lib, components,
+   supabase, .env.example, etc.). GitHub conserva las carpetas
+   tal cual: eso es lo que Vercel necesita para importar.
+   OJO: el archivo .env.example SÍ se sube (no trae secretos,
+   la secreta va solo como marcador).
+8. Abajo aprieta «Commit changes». Ya tienes tu código en GitHub.
+
+PASO 2 — Crear las tablas en Supabase y la carpeta de fotos
+------------------------------------------------------------
+1. Entra a supabase.com y abre tu proyecto (el de las claves reales
+   que ya pegaste en tu panel de administrador aquí).
+2. En el menú de la izquierda aprieta «SQL Editor».
+3. Aprieta «New query», pega TODO el archivo supabase/schema.sql
+   del proyecto y aprieta el botón «Run». Debe decir que se
+   ejecutó sin errores. Ese mismo archivo crea la carpeta
+   (bucket) «fotos-negocios» para los logos y portadas;
+   verifícala en «Storage».
+4. No borres nada de «Claves API»: de ahí salen los datos del
+   paso 4 (Project URL, clave publicable y clave secreta).
+
+PASO 3 — Importar el proyecto en Vercel
+----------------------------------------
+1. Entra a vercel.com. Estás en la pantalla «Let's build something
+   new», en la sección «Import Git Repository».
+2. Aprieta el botón «GitHub» e inicia sesión/autoriza a Vercel a
+   ver tus repositorios.
+3. Busca «mi-colonia-digital» en la lista y aprieta «Import».
+   Vercel detecta solo que es Next.js gracias al package.json.
+4. NO aprietes Deploy todavía: primero pega las variables del
+   paso 4.
+
+PASO 4 — Pegar las variables de entorno en Vercel (ANTES de Deploy)
+---------------------------------------------------------------------
+En la misma pantalla de importación hay una sección llamada
+«Environment Variables». Agrega una por una estas 5, copiando el
+nombre EXACTO y pegando su valor:
+
+  NEXT_PUBLIC_SUPABASE_URL
+    → tu Project URL (en Supabase: Settings → API, hasta arriba).
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    → tu clave publicable (la de arriba en «Claves API»,
+      empieza con sb_publishable_).
+  SUPABASE_SECRET_KEY
+    → tu clave secreta (la de abajo en «Claves secretas»,
+      empieza con sb_secret_). Es SECRETA: pégala solo aquí,
+      nunca en GitHub, en un chat ni en una foto.
+  NEXT_PUBLIC_SITE_URL
+    → https://micoloniadigital.com
+  ADMIN_PASSWORD
+    → inventa tu contraseña de administrador y escríbela SOLO
+      aquí, en Vercel (con ADMIN_EMAIL=micoloniadigital@gmail.com
+      es como entras a /admin). No la subas a GitHub.
+
+La plantilla .env.example del proyecto ya trae tu Project URL y
+tu clave publicable puestas si ya las guardaste en tu panel; la
+secreta y la contraseña de admin van solo como marcadores.
+
+PASO 5 — Desplegar
+------------------
+1. Con las 5 variables puestas, aprieta el botón «Deploy».
+2. Espera a que termine (unos minutos). Vercel te dará una
+   dirección parecida a mi-colonia-digital.vercel.app.
+3. Apriétala y revisa que la página abra: portada, catálogo y un
+   escaparate de prueba. Si algo falla, casi siempre es una
+   variable mal pegada: revisa el paso 4 letra por letra.
+
+PASO 6 — Conectar tu dominio micoloniadigital.com en Vercel
+-------------------------------------------------------------
+1. En Vercel entra a tu proyecto → «Settings» → «Domains».
+2. Escribe micoloniadigital.com y aprieta «Add». Agrega también
+   www.micoloniadigital.com si te lo sugiere.
+3. Vercel te va a mostrar unos datos de DNS (un registro A y/o un
+   CNAME). Déjalos a la vista: son los que vas a pegar en
+   HostGator en el paso 7. No inventes ningún número: usa solo
+   los que Vercel muestre en tu pantalla.
+
+PASO 7 — Apuntar el dominio en HostGator (con tus botones)
+------------------------------------------------------------
+1. Entra a tu panel de HostGator → «Dominios».
+2. En la fila de micoloniadigital.com, a la derecha, aprieta el
+   botón «Administrar».
+3. Busca donde diga «DNS» o «Zona DNS».
+4. Pega los datos EXACTOS que te dio Vercel en el paso 6 (el
+   registro A para el dominio sin www y el CNAME para www).
+5. Tu otro dominio, micoloniadigital.online, déjalo quieto:
+   no se toca.
+6. Espera a que el cambio se reparta: puede tardar de unos
+   minutos a unas horas. Cuando Vercel marque el dominio como
+   válido, tu página abrirá en https://micoloniadigital.com
+   con candadito (SSL automático de Vercel).
+
+PASO 8 — Probar todo en tu dominio
+----------------------------------
+1. Entra a https://micoloniadigital.com y revisa la portada, el
+   buscador y el catálogo.
+2. Entra como administrador con micoloniadigital@gmail.com.
+3. Registra un negocio de prueba: revisa que llegue el código
+   de 6 dígitos a su correo, sube logo y portada, crea una
+   promoción y préndela/apágala desde su panel.
+4. Desde tu panel de admin: regístrale el pago de $259, verifica
+   que se active con su fecha de vencimiento y márcalo como
+   lugar destacado (máximo 5).
+5. Arma un pedido de prueba y mándalo por WhatsApp.
+6. Borra el negocio de prueba desde tu panel («Eliminar local»)
+   y listo: a invitar a los primeros negocios verdaderos.
+
+REGLAS QUE NO CAMBIAN:
+- Mario cobra personalmente los $259/mes: NO hay Mercado Pago
+  ni Stripe en esta plataforma.
+- 7 días de gracia después del vencimiento antes de suspender.
+- La clave secreta de Supabase jamás se comparte ni se sube a
+  GitHub: vive solo en el servidor (variables de Vercel).
