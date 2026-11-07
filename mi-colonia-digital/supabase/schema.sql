@@ -171,8 +171,14 @@ insert into public.platform_config (key, value, is_test) values
   ('domain', 'micoloniadigital.com', false),
   ('monthly_price_mxn', '259', false),
   ('grace_days', '7', false),
-  ('max_featured', '5', false)
+  ('max_featured', '5', false),
+  ('site_visits', '0', false)
 on conflict (key) do nothing;
+-- site_visits = contador REAL de visitas a la portada: la
+-- portada lo incrementa en el servidor en cada carga
+-- (lib/catalogo.ts → registrarVisitaPortada) y el total se
+-- muestra en la sección «Redes oficiales». No es un número
+-- fijo: crece solo con visitas verdaderas.
 
 -- ---------- updated_at automático ----------
 create or replace function public.touch_updated_at()

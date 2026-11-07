@@ -2,11 +2,19 @@
 // demo: encabezado fijo con logo, buscador y carrito
 // (components/Header), pie con las redes oficiales
 // (components/Footer) y barra inferior en celular
-// (components/MobileNav).
+// (components/MobileNav). La sesión se lee AQUÍ, en el
+// servidor, en cada navegación: por eso el encabezado
+// siempre muestra lo correcto («Panel admin»/«Mi panel» y
+// «Salir» con sesión, «Iniciar sesión» sin ella) y la sesión
+// persiste en todo el sitio, como en el demo. También monta
+// el popup de login (LoginModalHost), que se abre desde el
+// encabezado y la barra de celular.
 import type { Metadata } from "next";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import MobileNav from "../components/MobileNav";
+import LoginModalHost from "../components/LoginModal";
+import { leerSesion } from "../lib/sesion";
 import { SITE_URL } from "../lib/plataforma";
 import "./globals.css";
 
@@ -17,18 +25,20 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const sesion = await leerSesion();
   return (
     <html lang="es">
       <body>
-        <Header />
+        <Header sesion={sesion} />
         {children}
         <Footer />
-        <MobileNav />
+        <MobileNav sesion={sesion} />
+        <LoginModalHost />
       </body>
     </html>
   );

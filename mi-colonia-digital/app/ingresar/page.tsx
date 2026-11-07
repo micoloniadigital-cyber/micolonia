@@ -1,53 +1,22 @@
-// app/ingresar/page.tsx — inicio de sesión de comerciantes
-// y del administrador.
-"use client";
+// app/ingresar/page.tsx — el inicio de sesión COMO EN EL
+// DEMO: normalmente se abre como POPUP desde el encabezado
+// (components/LoginModal); esta ruta existe para enlaces
+// directos y para cuando /panel o /admin piden sesión, y
+// muestra el MISMO formulario dentro de una tarjeta con el
+// diseño del popup, centrada sobre el fondo cálido. Si ya hay
+// sesión, manda directo a tu panel.
+import { redirect } from "next/navigation";
+import { LoginForm } from "../../components/LoginModal";
+import { leerSesion } from "../../lib/sesion";
 
-import { useActionState } from "react";
-import {
-  entrarAdmin,
-  entrarComerciante,
-  type LoginState,
-} from "./actions";
-
-const inicial: LoginState = {};
-
-export default function IngresarPage() {
-  const [com, formCom] = useActionState(entrarComerciante, inicial);
-  const [adm, formAdm] = useActionState(entrarAdmin, inicial);
+export default async function IngresarPage() {
+  const sesion = await leerSesion();
+  if (sesion) redirect(sesion.rol === "admin" ? "/admin" : "/panel");
   return (
-    <main>
-      <h1>Iniciar sesión</h1>
-      <section className="panel-seccion">
-        <h2>Soy comerciante</h2>
-        <p className="tenue">Entra con el correo y la contraseña de tu negocio.</p>
-        {com.error ? <p className="error" role="alert">{com.error}</p> : null}
-        <form action={formCom} className="formulario">
-          <label>
-            Correo de tu negocio
-            <input name="email" type="email" required autoComplete="email" aria-label="Correo del negocio" />
-          </label>
-          <label>
-            Contraseña
-            <input name="password" type="password" required autoComplete="current-password" aria-label="Contraseña" />
-          </label>
-          <button type="submit" className="boton">Entrar a mi panel</button>
-        </form>
-      </section>
-      <section className="panel-seccion">
-        <h2>Soy el administrador</h2>
-        {adm.error ? <p className="error" role="alert">{adm.error}</p> : null}
-        <form action={formAdm} className="formulario">
-          <label>
-            Correo del administrador
-            <input name="email" type="email" required autoComplete="email" aria-label="Correo del administrador" />
-          </label>
-          <label>
-            Contraseña del administrador
-            <input name="password" type="password" required autoComplete="current-password" aria-label="Contraseña del administrador" />
-          </label>
-          <button type="submit" className="boton boton-azul">Entrar al panel de admin</button>
-        </form>
-      </section>
+    <main className="mx-auto flex max-w-md px-4 py-10 sm:py-16">
+      <div className="w-full rounded-[28px] bg-[var(--surface)] p-6 shadow-xl ring-1 ring-[var(--border)]">
+        <LoginForm />
+      </div>
     </main>
   );
 }

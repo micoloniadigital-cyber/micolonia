@@ -128,6 +128,39 @@ export async function getBusinessBySlug(
   return res.data ? mapBusiness(res.data as Fila) : null;
 }
 
+// Contador REAL de visitas a la portada: vive en
+// platform_config (clave «site_visits»). Cada carga de la
+// portada suma 1 EN EL SERVIDOR y devuelve el total, que se
+// muestra en la sección «Redes oficiales». No es un número
+// fijo ni simulado: crece solo con visitas verdaderas. Si la
+// fila no existe todavía (base anterior a este cambio), se
+// crea con la primera visita.
+export async function registrarVisitaPortada(): Promise<number> {
+  try {
+    const db = supabaseServer();
+    const fila = await db
+      .from("platform_config")
+      .select("value")
+      .eq("key", "site_visits")
+      .maybeSingle();
+    const actual = fila.data
+      ? Number.parseInt(String((fila.data as { value: string }).value), 10) || 0
+      : 0;
+    const nuevo = actual + 1;
+    await db
+      .from("platform_config")
+      .upsert(
+        { key: "site_visits", value: String(nuevo), is_test: false },
+        { onConflict: "key" },
+      );
+    return nuevo;
+  } catch {
+    // Si la base no responde, la portada se muestra igual,
+    // solo sin poder sumar esta visita.
+    return 0;
+  }
+}
+
 // Secciones de la portada, derivadas de banderas reales:
 export function featuredPlaces(list: Business[]): Business[] {
   return list.filter((b) => b.featured).slice(0, MAX_FEATURED);

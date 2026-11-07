@@ -23,9 +23,37 @@ function campo(fd: FormData, k: string): string {
 export async function adminSetEstado(fd: FormData): Promise<void> {
   await soloAdmin();
   const db = supabaseServer();
+  const cambios: Record<string, string> = { status: campo(fd, "estado") };
+  // El botón grande «Activar/Desactivar local» del panel manda
+  // también la suscripción, como en el demo: al desactivar
+  // queda «vencida» y al activar queda «activa».
+  const suscripcion = campo(fd, "suscripcion");
+  if (suscripcion) cambios.subscription_status = suscripcion;
   await db
     .from("businesses")
-    .update({ status: campo(fd, "estado") })
+    .update(cambios)
+    .eq("id", Number(campo(fd, "id")));
+  revalidatePath("/admin");
+}
+
+export async function adminSetSuscripcion(fd: FormData): Promise<void> {
+  await soloAdmin();
+  const db = supabaseServer();
+  await db
+    .from("businesses")
+    .update({ subscription_status: campo(fd, "suscripcion") })
+    .eq("id", Number(campo(fd, "id")));
+  revalidatePath("/admin");
+}
+
+export async function adminSetVencimiento(fd: FormData): Promise<void> {
+  await soloAdmin();
+  const fecha = campo(fd, "fecha");
+  if (!fecha) return;
+  const db = supabaseServer();
+  await db
+    .from("businesses")
+    .update({ next_payment_date: fecha })
     .eq("id", Number(campo(fd, "id")));
   revalidatePath("/admin");
 }
@@ -97,7 +125,9 @@ export async function adminRegistrarPago(fd: FormData): Promise<void> {
 export async function adminEliminarNegocio(fd: FormData): Promise<void> {
   await soloAdmin();
   const id = Number(campo(fd, "id"));
-  if (campo(fd, "confirmar") !== "ELIMINAR") return;
+  // La confirmación es la de dos pasos del panel, igual que en
+  // el demo: «Eliminar local» abre el aviso rojo y solo el
+  // botón «Sí, eliminar definitivamente» manda esta acción.
   const db = supabaseServer();
   await db.from("products").delete().eq("business_id", id);
   await db.from("payments").delete().eq("business_id", id);

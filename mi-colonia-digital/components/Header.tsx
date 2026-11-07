@@ -2,7 +2,12 @@
 // barra fija con el logo oficial (foto), buscador con
 // selector de colonia, botón de carrito con contador y la
 // navegación principal; en celular, segunda fila con la
-// colonia y los botones.
+// colonia y los botones. Como en el demo, «Iniciar sesión»
+// abre el POPUP de login (components/LoginModal) y, cuando
+// hay sesión (la lee el layout en el servidor y la pasa como
+// prop), a la derecha se ve «Panel admin» o «Mi panel» más
+// «Salir» — la sesión persiste al navegar porque vive en la
+// cookie firmada, y «Salir» la cierra en el servidor.
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
@@ -11,8 +16,11 @@ import { useRouter } from "next/navigation";
 import { LOGO_URL } from "../lib/fotos";
 import { CART_EVENT, cartCount } from "../lib/carrito";
 import { COLONIAS } from "../lib/plataforma";
+import { abrirLogin } from "./LoginModal";
+import { salir } from "../app/ingresar/actions";
+import type { Sesion } from "../lib/sesion";
 
-export default function Header() {
+export default function Header({ sesion }: { sesion: Sesion | null }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [colonia, setColonia] = useState("");
@@ -107,9 +115,29 @@ export default function Header() {
           <Link href="/registro" className="rounded-full bg-[var(--accent)] px-3.5 py-2 text-sm font-bold text-white shadow-sm">
             Publica tu negocio
           </Link>
-          <Link href="/ingresar" className="rounded-full px-3 py-2 text-sm font-semibold hover:bg-[var(--accent-soft)]">
-            Iniciar sesión
-          </Link>
+          {sesion ? (
+            <>
+              <Link
+                href={sesion.rol === "admin" ? "/admin" : "/panel"}
+                className="rounded-full px-3 py-2 text-sm font-semibold hover:bg-[var(--accent-soft)]"
+              >
+                {sesion.rol === "admin" ? "Panel admin" : "Mi panel"}
+              </Link>
+              <form action={salir}>
+                <button type="submit" className="rounded-full px-3 py-2 text-sm font-semibold text-[var(--dim)] hover:bg-[var(--surface-alt)]">
+                  Salir
+                </button>
+              </form>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={abrirLogin}
+              className="rounded-full px-3 py-2 text-sm font-semibold hover:bg-[var(--accent-soft)]"
+            >
+              Iniciar sesión
+            </button>
+          )}
         </nav>
       </div>
       <div className="mx-auto flex max-w-6xl flex-wrap gap-2 px-4 pb-3 md:hidden">
@@ -133,9 +161,22 @@ export default function Header() {
         <Link href="/registro" className="rounded-full bg-[var(--accent)] px-3 py-2 text-sm font-bold text-white">
           Publica tu negocio
         </Link>
-        <Link href="/ingresar" className="rounded-full bg-[var(--surface)] px-3 py-2 text-sm font-semibold ring-1 ring-[var(--border)]">
-          Entrar
-        </Link>
+        {sesion ? (
+          <Link
+            href={sesion.rol === "admin" ? "/admin" : "/panel"}
+            className="rounded-full bg-[var(--surface)] px-3 py-2 text-sm font-semibold ring-1 ring-[var(--border)]"
+          >
+            {sesion.rol === "admin" ? "Admin" : "Mi panel"}
+          </Link>
+        ) : (
+          <button
+            type="button"
+            onClick={abrirLogin}
+            className="rounded-full bg-[var(--surface)] px-3 py-2 text-sm font-semibold ring-1 ring-[var(--border)]"
+          >
+            Entrar
+          </button>
+        )}
       </div>
     </header>
   );

@@ -19,6 +19,7 @@ import {
   featuredPlaces,
   getCatalog,
   recentBusinesses,
+  registrarVisitaPortada,
 } from "../lib/catalogo";
 import {
   CATEGORIES,
@@ -56,6 +57,10 @@ function SectionTitle({
 }
 
 export default async function HomePage() {
+  // Contador REAL de visitas: cada carga de la portada suma 1
+  // en el servidor (platform_config.site_visits) y el total se
+  // muestra en «Redes oficiales», igual que en el demo.
+  const visitas = await registrarVisitaPortada();
   const { businesses, products } = await getCatalog();
   const featured = featuredPlaces(businesses);
   const promos = activePromotions(businesses, products);
@@ -334,6 +339,14 @@ export default async function HomePage() {
             <p className="mt-1 text-sm text-stone-600">
               Síguenos para enterarte de los nuevos negocios de tu colonia, los
               lugares destacados y las promociones activas de la semana.
+            </p>
+            <p
+              className="mt-3 inline-flex items-center gap-2 rounded-full bg-[var(--accent-soft)] px-3.5 py-1.5 text-sm font-bold text-[var(--accent)]"
+              role="status"
+              aria-label={"Contador de visitas: " + visitas + " visitas a la página"}
+            >
+              <span aria-hidden>👁️</span>{" "}
+              {visitas.toLocaleString("es-MX")} visitas a la página
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
