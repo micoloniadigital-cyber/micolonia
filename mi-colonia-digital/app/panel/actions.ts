@@ -5,7 +5,7 @@
 
 import { revalidatePath } from "next/cache";
 import { hashPassword } from "../../lib/auth";
-import { STORAGE_BUCKET } from "../../lib/plataforma";
+import { STORAGE_BUCKET, validarScheduleJson } from "../../lib/plataforma";
 import { leerSesion } from "../../lib/sesion";
 import { supabaseServer } from "../../lib/supabase-server";
 
@@ -25,6 +25,11 @@ function campo(fd: FormData, k: string): string {
 export async function actualizarNegocio(fd: FormData): Promise<void> {
   const id = await miNegocioId();
   const db = supabaseServer();
+  // Horario por día: el checklist del panel manda el campo oculto
+  // «schedule» (JSON). Si es válido se guarda el JSON y se derivan
+  // days_label/open_time/close_time; si no, se conservan los
+  // campos clásicos que traiga el formulario (o los actuales).
+  const sched = validarScheduleJson(campo(fd, "schedule"));
   await db
     .from("businesses")
     .update({
@@ -40,9 +45,12 @@ export async function actualizarNegocio(fd: FormData): Promise<void> {
       facebook: campo(fd, "facebook"),
       instagram: campo(fd, "instagram"),
       tiktok: campo(fd, "tiktok"),
-      open_time: campo(fd, "openTime") || "09:00",
-      close_time: campo(fd, "closeTime") || "21:00",
-      days_label: campo(fd, "daysLabel") || "Lunes a domingo",
+      open_time: sched ? sched.openTime : campo(fd, "openTime") || "09:00",
+      close_time: sched ? sched.closeTime : campo(fd, "closeTime") || "21:00",
+      days_label: sched ? sched.daysLabel : campo(fd, "daysLabel") || "Lunes a domingo",
+      // Sin schedule válido NO se toca la columna: se conserva el
+      // horario por día que el negocio ya tuviera guardado.
+      ...(sched ? { schedule: sched.schedule } : {}),
       accent: campo(fd, "accent") || "#EA580C",
     })
     .eq("id", id);

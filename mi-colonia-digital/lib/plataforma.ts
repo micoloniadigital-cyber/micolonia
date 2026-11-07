@@ -43,6 +43,117 @@ export type SubscriptionStatus =
   | "vencida"
   | "cancelada";
 
+// Horario por día (checklist): un objeto por día MARCADO.
+// La base lo guarda en la columna «schedule» (jsonb) como un
+// arreglo de estos objetos; openTime/closeTime/daysLabel se
+// derivan de él en el servidor (ver deriveScheduleFields).
+export interface ScheduleDay {
+  day: string; // "Lunes" | "Martes" | ... | "Domingo"
+  open: string; // "09:00"
+  close: string; // "21:00"
+}
+
+export const WEEK_DAYS = [
+  "Lunes",
+  "Martes",
+  "Miércoles",
+  "Jueves",
+  "Viernes",
+  "Sábado",
+  "Domingo",
+] as const;
+
+const SCHEDULE_TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+// Normaliza lo que venga de la base (jsonb ya parseado por
+// Supabase) o de un texto JSON: devuelve solo entradas válidas,
+// ordenadas de Lunes a Domingo. Cualquier otra cosa → [].
+export function parseSchedule(value: unknown): ScheduleDay[] {
+  let v: unknown = value;
+  if (typeof v === "string") {
+    if (!v) return [];
+    try {
+      v = JSON.parse(v);
+    } catch {
+      return [];
+    }
+  }
+  if (!Array.isArray(v)) return [];
+  const out: ScheduleDay[] = [];
+  for (const item of v) {
+    if (!item || typeof item !== "object") continue;
+    const rec = item as Record<string, unknown>;
+    if (
+      typeof rec.day === "string" &&
+      (WEEK_DAYS as readonly string[]).includes(rec.day) &&
+      typeof rec.open === "string" &&
+      SCHEDULE_TIME_RE.test(rec.open) &&
+      typeof rec.close === "string" &&
+      SCHEDULE_TIME_RE.test(rec.close) &&
+      !out.some((e) => e.day === rec.day)
+    ) {
+      out.push({ day: rec.day, open: rec.open, close: rec.close });
+    }
+  }
+  out.sort(
+    (a, b) =>
+      (WEEK_DAYS as readonly string[]).indexOf(a.day) -
+      (WEEK_DAYS as readonly string[]).indexOf(b.day),
+  );
+  return out;
+}
+
+// Valida el JSON que manda el formulario (campo oculto
+// «schedule»): exige al menos un día y que TODO sea válido.
+// Devuelve null si no sirve, para que el servidor conserve los
+// campos clásicos en vez de guardar un horario roto.
+export function validarScheduleJson(
+  raw: string,
+): {
+  schedule: ScheduleDay[];
+  daysLabel: string;
+  openTime: string;
+  closeTime: string;
+} | null {
+  if (!raw) return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(parsed) || parsed.length === 0) return null;
+  const entries = parseSchedule(parsed);
+  if (entries.length !== parsed.length) return null;
+  return { schedule: entries, ...deriveScheduleFields(entries) };
+}
+
+// Deriva los campos de siempre desde el horario por día:
+// daysLabel («Lunes a domingo» si son los 7, «Lunes a viernes»
+// si es esa corrida, si no la lista de días), openTime (la
+// apertura más temprana) y closeTime (el cierre más tardío).
+export function deriveScheduleFields(entries: ScheduleDay[]): {
+  daysLabel: string;
+  openTime: string;
+  closeTime: string;
+} {
+  const days = WEEK_DAYS.filter((d) => entries.some((e) => e.day === d));
+  let daysLabel: string;
+  if (days.length === 7) {
+    daysLabel = "Lunes a domingo";
+  } else if (
+    days.length === 5 &&
+    days.join("|") === "Lunes|Martes|Miércoles|Jueves|Viernes"
+  ) {
+    daysLabel = "Lunes a viernes";
+  } else {
+    daysLabel = days.join(", ");
+  }
+  const openTime = entries.map((e) => e.open).sort()[0] || "09:00";
+  const closeTime = entries.map((e) => e.close).sort().slice(-1)[0] || "21:00";
+  return { daysLabel, openTime, closeTime };
+}
+
 export interface Business {
   id: number;
   slug: string;
@@ -63,6 +174,7 @@ export interface Business {
   openTime: string; // "09:00"
   closeTime: string; // "21:00"
   daysLabel: string;
+  schedule: ScheduleDay[]; // horario por día; [] = usar los campos de arriba
   coverUrl: string; // portada SUBIDA por el negocio (bucket); "" si no subió
   coverKey: string; // clave de la galería del demo (lib/fotos.ts)
   logoUrl: string;
@@ -134,9 +246,20 @@ export function effectivePrice(p: Product, b: Business): number {
 
 export function isOpenNow(b: Business, now: Date = new Date()): boolean {
   const cur = now.getHours() * 60 + now.getMinutes();
-  const parts = b.openTime.split(":").map(Number);
+  // Con horario por día manda el día de HOY: si hoy no está
+  // marcado, está cerrado aunque los demás días abra.
+  let openStr = b.openTime;
+  let closeStr = b.closeTime;
+  if (b.schedule && b.schedule.length > 0) {
+    const todayName = WEEK_DAYS[(now.getDay() + 6) % 7];
+    const today = b.schedule.find((e) => e.day === todayName);
+    if (!today) return false;
+    openStr = today.open;
+    closeStr = today.close;
+  }
+  const parts = openStr.split(":").map(Number);
   const open = (parts[0] || 9) * 60 + (parts[1] || 0);
-  const parts2 = b.closeTime.split(":").map(Number);
+  const parts2 = closeStr.split(":").map(Number);
   const close = (parts2[0] || 21) * 60 + (parts2[1] || 0);
   if (close <= open) return cur >= open || cur < close; // cierra de madrugada
   return cur >= open && cur < close;

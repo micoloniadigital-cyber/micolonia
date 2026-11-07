@@ -5,6 +5,7 @@ import { supabaseServer } from "./supabase-server";
 import { publicPhotoUrl } from "./supabase";
 import {
   MAX_FEATURED,
+  parseSchedule,
   type Business,
   type Product,
 } from "./plataforma";
@@ -52,6 +53,7 @@ export function mapBusiness(f: Fila): Business {
     openTime: hora(f, "open_time", "09:00"),
     closeTime: hora(f, "close_time", "21:00"),
     daysLabel: texto(f, "days_label") || "Lunes a domingo",
+    schedule: parseSchedule(f["schedule"]),
     coverUrl: publicPhotoUrl(texto(f, "cover_path")),
     coverKey: texto(f, "cover_key"),
     logoUrl: publicPhotoUrl(texto(f, "logo_path")),

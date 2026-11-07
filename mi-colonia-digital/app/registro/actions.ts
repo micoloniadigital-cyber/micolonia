@@ -21,7 +21,7 @@ import {
   newVerificationCode,
 } from "../../lib/auth";
 import { enviarCodigoPorCorreo } from "../../lib/correo";
-import { slugify } from "../../lib/plataforma";
+import { slugify, validarScheduleJson } from "../../lib/plataforma";
 import { crearSesion } from "../../lib/sesion";
 import { supabaseServer } from "../../lib/supabase-server";
 
@@ -80,6 +80,12 @@ export async function registrarNegocio(
   const vence = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
     .toISOString()
     .slice(0, 10);
+  // Horario por día: el formulario manda el checklist en el campo
+  // oculto «schedule» (JSON [{ day, open, close }] solo con los
+  // días marcados). Se valida aquí y se guardan el JSON (columna
+  // schedule jsonb) y los campos derivados. Si no viene válido,
+  // se conservan los valores clásicos del formulario o el default.
+  const sched = validarScheduleJson(campo(fd, "schedule"));
   const ins = await db
     .from("businesses")
     .insert({
@@ -99,9 +105,10 @@ export async function registrarNegocio(
       facebook: campo(fd, "facebook"),
       instagram: campo(fd, "instagram"),
       tiktok: campo(fd, "tiktok"),
-      open_time: campo(fd, "openTime") || "09:00",
-      close_time: campo(fd, "closeTime") || "21:00",
-      days_label: campo(fd, "daysLabel") || "Lunes a domingo",
+      open_time: sched ? sched.openTime : campo(fd, "openTime") || "09:00",
+      close_time: sched ? sched.closeTime : campo(fd, "closeTime") || "21:00",
+      days_label: sched ? sched.daysLabel : campo(fd, "daysLabel") || "Lunes a domingo",
+      schedule: sched ? sched.schedule : [],
       status: "pendiente",
       subscription_status: "pendiente_pago",
       next_payment_date: vence,

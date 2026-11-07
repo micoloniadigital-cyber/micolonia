@@ -92,6 +92,11 @@ main > h1 {
 }
 .formulario input[type="checkbox"] { width: auto; min-height: 0; }
 .formulario textarea { min-height: 88px; }
+.horario-checklist { border: 1px solid var(--border); border-radius: 16px; padding: 12px 14px; display: grid; gap: 8px; }
+.horario-checklist legend { font-weight: 700; font-size: 14px; padding: 0 4px; }
+.horario-checklist .horario-dia { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.horario-checklist .horario-dia label { display: inline-flex; align-items: center; gap: 6px; min-width: 128px; }
+.horario-checklist input[type="time"] { width: auto; min-height: 40px; padding: 6px 10px; }
 .panel-seccion {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: 24px; padding: 20px; margin-bottom: 16px;

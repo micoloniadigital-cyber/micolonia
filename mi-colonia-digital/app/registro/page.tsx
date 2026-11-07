@@ -9,6 +9,7 @@ import {
   verificarCodigo,
   type RegistroState,
 } from "./actions";
+import HorarioChecklist from "../../components/HorarioChecklist";
 import { CATEGORIES, COLONIAS, MONTHLY_PRICE, money } from "../../lib/plataforma";
 
 const inicial: RegistroState = { paso: "datos" };
@@ -65,8 +66,9 @@ export default function RegistroPage() {
       <h1>Registra tu negocio</h1>
       <p>
         Tu escaparate digital por <strong>{money(MONTHLY_PRICE)} al mes</strong>.
-        Sin Mercado Pago ni Stripe: Mario te cobra en persona y activa tu
-        negocio. Primero creas tu cuenta y confirmas tu correo con un código.
+        Todas las comisiones para tu negocio. Primero creas tu cuenta y
+        confirmas tu correo con un código. Y nosotros nos encargamos de que
+        seas visible. Mi Colonia Digital apoya a los comercios locales.
       </p>
       {reg.error ? <p className="error" role="alert">{reg.error}</p> : null}
       <form action={formReg} className="formulario">
@@ -128,18 +130,7 @@ export default function RegistroPage() {
           Teléfono
           <input name="phone" inputMode="tel" aria-label="Teléfono del negocio" />
         </label>
-        <label>
-          Horario de apertura
-          <input name="openTime" type="time" defaultValue="09:00" aria-label="Hora de apertura" />
-        </label>
-        <label>
-          Horario de cierre
-          <input name="closeTime" type="time" defaultValue="21:00" aria-label="Hora de cierre" />
-        </label>
-        <label>
-          Días que abres
-          <input name="daysLabel" defaultValue="Lunes a domingo" aria-label="Días de atención" />
-        </label>
+        <HorarioChecklist />
         <label>
           Facebook (enlace completo)
           <input name="facebook" type="url" aria-label="Facebook del negocio" />

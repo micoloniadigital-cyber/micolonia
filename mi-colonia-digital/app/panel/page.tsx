@@ -13,6 +13,7 @@ import {
   guardarProducto,
   subirFoto,
 } from "./actions";
+import HorarioChecklist from "../../components/HorarioChecklist";
 import { mapBusiness, mapProduct } from "../../lib/catalogo";
 import {
   CATEGORIES,
@@ -139,9 +140,7 @@ export default async function PanelPage() {
           <label>Enlace de Google Maps<input name="mapsUrl" defaultValue={b.mapsUrl} aria-label="Enlace de Google Maps" /></label>
           <label>WhatsApp para pedidos<input name="whatsapp" defaultValue={b.whatsapp} aria-label="WhatsApp" /></label>
           <label>Teléfono<input name="phone" defaultValue={b.phone} aria-label="Teléfono" /></label>
-          <label>Apertura<input name="openTime" type="time" defaultValue={b.openTime} aria-label="Hora de apertura" /></label>
-          <label>Cierre<input name="closeTime" type="time" defaultValue={b.closeTime} aria-label="Hora de cierre" /></label>
-          <label>Días<input name="daysLabel" defaultValue={b.daysLabel} aria-label="Días de atención" /></label>
+          <HorarioChecklist inicial={b.schedule} apertura={b.openTime} cierre={b.closeTime} />
           <label>Facebook<input name="facebook" defaultValue={b.facebook} aria-label="Facebook" /></label>
           <label>Instagram<input name="instagram" defaultValue={b.instagram} aria-label="Instagram" /></label>
           <label>TikTok<input name="tiktok" defaultValue={b.tiktok} aria-label="TikTok" /></label>

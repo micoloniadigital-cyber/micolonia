@@ -40,6 +40,13 @@ create table if not exists public.businesses (
   open_time time not null default '09:00',
   close_time time not null default '21:00',
   days_label text not null default 'Lunes a domingo',
+  -- Horario por día (checklist): arreglo JSON de objetos
+  -- { day, open, close } SOLO con los días marcados, p. ej.
+  -- [{"day":"Lunes","open":"09:00","close":"21:00"}]. El servidor
+  -- deriva de aquí days_label, open_time (apertura más temprana)
+  -- y close_time (cierre más tardío). Arreglo vacío = sin horario
+  -- por día: se usan open_time/close_time/days_label como antes.
+  schedule jsonb not null default '[]'::jsonb,
   -- Fotos: rutas dentro del bucket «fotos-negocios» de Storage.
   cover_key text not null default '',
   cover_path text not null default '',
@@ -66,6 +73,11 @@ create table if not exists public.businesses (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Si la tabla ya existía (proyecto creado antes del checklist de
+-- horario), esta línea agrega la columna sin tocar nada más.
+alter table public.businesses
+  add column if not exists schedule jsonb not null default '[]'::jsonb;
 
 create unique index if not exists businesses_owner_email_idx
   on public.businesses (lower(owner_email));

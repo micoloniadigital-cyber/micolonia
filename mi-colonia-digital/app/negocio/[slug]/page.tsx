@@ -130,7 +130,18 @@ export default async function NegocioPage({
             <div className="rounded-2xl bg-[var(--surface-alt)] p-3">
               <dt className="font-bold">🕐 Horario</dt>
               <dd className="text-stone-600">
-                {negocio.daysLabel}: {negocio.openTime}–{negocio.closeTime}
+                {negocio.schedule.length > 0 ? (
+                  <ul className="mt-0.5 space-y-0.5">
+                    {negocio.schedule.map((e) => (
+                      <li key={e.day} className="flex justify-between gap-3">
+                        <span className="font-semibold">{e.day}</span>
+                        <span>{e.open}–{e.close}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <>{negocio.daysLabel}: {negocio.openTime}–{negocio.closeTime}</>
+                )}
               </dd>
             </div>
             <div className="rounded-2xl bg-[var(--surface-alt)] p-3">
