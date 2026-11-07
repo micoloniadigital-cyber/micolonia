@@ -178,7 +178,7 @@ export default async function HomePage() {
         </SectionTitle>
         <p className="-mt-1 mb-3 text-sm text-[var(--dim)]">
           Los 5 lugares que el administrador de Mi Colonia Digital elige para
-          ti. Solo el admin puede poner un negocio aquí.
+          ti.
         </p>
         {featured.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
@@ -209,8 +209,7 @@ export default async function HomePage() {
           🏷️ Promociones activas
         </SectionTitle>
         <p className="-mt-1 mb-3 text-sm text-[var(--dim)]">
-          Ofertas vigentes de los locales de tu colonia. Cada negocio decide
-          cuándo prender y apagar sus promociones desde su panel.
+          Ofertas vigentes de los locales de tu colonia.
         </p>
         {promos.length > 0 ? (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
