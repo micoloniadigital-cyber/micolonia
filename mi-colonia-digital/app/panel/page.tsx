@@ -11,9 +11,9 @@ import {
   cambiarPromociones,
   eliminarProducto,
   guardarProducto,
-  subirFoto,
 } from "./actions";
 import HorarioChecklist from "../../components/HorarioChecklist";
+import SubirFotoForm from "../../components/SubirFotoForm";
 import { mapBusiness, mapProduct } from "../../lib/catalogo";
 import {
   CATEGORIES,
@@ -152,17 +152,11 @@ export default async function PanelPage() {
       <section className="panel-seccion" aria-label="Logo y portada">
         <h2>Logo y portada</h2>
         {b.logoUrl ? <p>Logo actual: <img src={b.logoUrl} alt="Logo actual" width={56} height={56} /></p> : null}
-        <form action={subirFoto} className="formulario">
-          <input type="hidden" name="tipo" value="logo" />
-          <label>Nuevo logo<input type="file" name="foto" accept="image/*" required aria-label="Subir logo" /></label>
-          <button type="submit" className="boton">Subir logo</button>
-        </form>
+        <SubirFotoForm tipo="logo" etiqueta="Nuevo logo" nombreAccesible="Subir logo" textoBoton="Subir logo" requerido />
+        <p className="tenue">Foto de hasta 2 MB. Si pesa más, el formulario te avisa ahí mismo para que elijas una más ligera.</p>
         {b.coverUrl ? <p>Portada actual: <img src={b.coverUrl} alt="Portada actual" width={240} /></p> : null}
-        <form action={subirFoto} className="formulario">
-          <input type="hidden" name="tipo" value="portada" />
-          <label>Nueva portada<input type="file" name="foto" accept="image/*" required aria-label="Subir portada" /></label>
-          <button type="submit" className="boton">Subir portada</button>
-        </form>
+        <SubirFotoForm tipo="portada" etiqueta="Nueva portada" nombreAccesible="Subir portada" textoBoton="Subir portada" requerido />
+        <p className="tenue">Foto de hasta 2 MB. Si pesa más, el formulario te avisa ahí mismo para que elijas una más ligera.</p>
       </section>
 
       <section className="panel-seccion" aria-label="Mis productos">
@@ -184,19 +178,14 @@ export default async function PanelPage() {
           </form>
         ))}
         {products.map((p) => (
-          <p key={"del" + p.id}>
+          <div key={"del" + p.id}>
             {p.name}{" "}
             <form action={eliminarProducto} style={{ display: "inline" }}>
               <input type="hidden" name="id" value={p.id} />
               <button type="submit" className="boton boton-tenue">Eliminar {p.name}</button>
             </form>{" "}
-            <form action={subirFoto} style={{ display: "inline" }} encType="multipart/form-data">
-              <input type="hidden" name="tipo" value="producto" />
-              <input type="hidden" name="productoId" value={p.id} />
-              <input type="file" name="foto" accept="image/*" aria-label={"Foto de " + p.name} />
-              <button type="submit" className="boton boton-tenue">Subir foto</button>
-            </form>
-          </p>
+            <SubirFotoForm tipo="producto" productoId={p.id} nombreAccesible={"Foto de " + p.name} textoBoton="Subir foto" enLinea />
+          </div>
         ))}
         <h3>Agregar producto</h3>
         <form action={guardarProducto} className="formulario">

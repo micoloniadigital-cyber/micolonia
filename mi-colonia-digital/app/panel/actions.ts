@@ -105,15 +105,27 @@ export async function cambiarPromociones(fd: FormData): Promise<void> {
   revalidatePath("/panel");
 }
 
+// Estado de la subida de foto: el formulario (components/
+// SubirFotoForm) lo muestra junto al botón. NUNCA se lanza un
+// error por el peso o por un fallo de subida: en producción un
+// throw dentro de una acción se convierte en la pantalla
+// «Application error» y el comerciante no sabe qué pasó.
+export type SubirFotoState = { error?: string; ok?: boolean } | null;
+
 // Sube logo, portada o foto de producto al bucket
 // «fotos-negocios» (carpeta de SU negocio) y guarda la ruta.
-export async function subirFoto(fd: FormData): Promise<void> {
+// Límite: 2 MB por foto (next.config sube el corte de Next.js
+// de 1 MB a 2 MB para que la foto sí llegue hasta aquí).
+export async function subirFoto(
+  _prev: SubirFotoState,
+  fd: FormData,
+): Promise<SubirFotoState> {
   const businessId = await miNegocioId();
   const tipo = campo(fd, "tipo"); // logo | portada | producto
   const archivo = fd.get("foto");
-  if (!(archivo instanceof File) || archivo.size === 0) return;
+  if (!(archivo instanceof File) || archivo.size === 0) return null;
   if (archivo.size > 2 * 1024 * 1024) {
-    throw new Error("La foto pesa más de 2 MB. Usa una más ligera.");
+    return { error: "Tu foto pesa más de 2 MB, elige una más ligera." };
   }
   const ext = (archivo.name.split(".").pop() || "jpg").toLowerCase();
   const ruta =
@@ -122,7 +134,7 @@ export async function subirFoto(fd: FormData): Promise<void> {
   const up = await db.storage
     .from(STORAGE_BUCKET)
     .upload(ruta, archivo, { upsert: true, contentType: archivo.type });
-  if (up.error) throw new Error("No pudimos subir la foto. Inténtalo de nuevo.");
+  if (up.error) return { error: "No pudimos subir la foto. Inténtalo de nuevo." };
   if (tipo === "logo") {
     await db.from("businesses").update({ logo_path: ruta }).eq("id", businessId);
   } else if (tipo === "portada") {
@@ -135,6 +147,7 @@ export async function subirFoto(fd: FormData): Promise<void> {
       .eq("business_id", businessId);
   }
   revalidatePath("/panel");
+  return { ok: true };
 }
 
 export async function cambiarContrasena(fd: FormData): Promise<void> {
