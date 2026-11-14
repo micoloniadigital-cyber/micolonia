@@ -1,7 +1,7 @@
 // app/page.tsx — portada EXACTA a la del demo: héroe con
 // la foto real del barrio y el logo, chips de colonias con
 // conteo, categorías con su icono, Lugares destacados
-// (máx. 5, solo el admin), Promociones activas (solo de
+// (máx. 10, solo el admin), Promociones activas (solo de
 // locales con sus promos prendidas), restaurantes
 // populares, recién agregados, productos destacados,
 // «¿Cómo funciona?», redes oficiales y la invitación
@@ -59,7 +59,8 @@ function SectionTitle({
 export default async function HomePage() {
   // Contador REAL de visitas: cada carga de la portada suma 1
   // en el servidor (platform_config.site_visits) y el total se
-  // muestra en «Redes oficiales», igual que en el demo.
+  // muestra en el héroe («Ya somos N vecinos conectados») y en
+  // «Redes oficiales», igual que en el demo.
   const visitas = await registrarVisitaPortada();
   const { businesses, products } = await getCatalog();
   const featured = featuredPlaces(businesses);
@@ -113,7 +114,19 @@ export default async function HomePage() {
               <strong className="text-[var(--text)]">
                 {businesses.length} negocios
               </strong>{" "}
-              ya están en la plataforma · Gratis para vecinos
+              ya están en la plataforma
+            </p>
+            <p
+              className="mt-3 inline-flex w-fit items-center gap-2 rounded-full bg-[var(--accent-soft)] px-3.5 py-1.5 text-sm font-bold text-[var(--accent)]"
+              role="status"
+              aria-label={
+                "Contador de visitas: ya somos " +
+                visitas.toLocaleString("es-MX") +
+                " vecinos conectados"
+              }
+            >
+              <span aria-hidden>👥</span> Ya somos{" "}
+              {visitas.toLocaleString("es-MX")} vecinos conectados
             </p>
           </div>
           <img
@@ -182,7 +195,7 @@ export default async function HomePage() {
           ⭐ Lugares destacados
         </SectionTitle>
         <p className="-mt-1 mb-3 text-sm text-[var(--dim)]">
-          Los 5 lugares que el administrador de Mi Colonia Digital elige para
+          Los {MAX_FEATURED} lugares que el administrador de Mi Colonia Digital elige para
           ti.
         </p>
         {featured.length > 0 ? (
@@ -197,7 +210,7 @@ export default async function HomePage() {
               Pronto verás aquí los lugares destacados de tu colonia ⭐
             </p>
             <p className="mt-1">
-              El administrador está eligiendo los primeros 5 lugares destacados.
+              El administrador está eligiendo los primeros {MAX_FEATURED} lugares destacados.
             </p>
           </div>
         )}

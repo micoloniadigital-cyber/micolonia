@@ -141,7 +141,7 @@ PASO 8 — Probar todo en tu dominio
    promoción y préndela/apágala desde su panel.
 4. Desde tu panel de admin: regístrale el pago de $259, verifica
    que se active con su fecha de vencimiento y márcalo como
-   lugar destacado (máximo 5).
+   lugar destacado (máximo 10).
 5. Arma un pedido de prueba y mándalo por WhatsApp.
 6. Borra el negocio de prueba desde tu panel («Eliminar local»)
    y listo: a invitar a los primeros negocios verdaderos.

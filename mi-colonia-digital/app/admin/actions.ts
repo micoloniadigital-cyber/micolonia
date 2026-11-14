@@ -1,6 +1,6 @@
 // app/admin/actions.ts — acciones del administrador (Mario).
 // Todas validan la sesión de admin en el servidor: activar/
-// suspender locales, destacar hasta 5 lugares, registrar el
+// suspender locales, destacar hasta 10 lugares, registrar el
 // cobro personal de $259 (activa y mueve el vencimiento),
 // eliminar locales y salir.
 "use server";

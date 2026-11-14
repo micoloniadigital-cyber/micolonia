@@ -1,13 +1,13 @@
 // lib/plataforma.ts — constantes, tipos y reglas del negocio.
 // Reglas de Mario: $259 MXN/mes con cobro personal (SIN Mercado
-// Pago y SIN Stripe), 7 días de gracia, destacados máximo 5 solo
+// Pago y SIN Stripe), 7 días de gracia, destacados máximo 10 solo
 // admin, promociones que cada local prende/apaga, 5 colonias
 // fijas y redes oficiales al pie.
 export const SITE_URL = "https://micoloniadigital.com";
 export const PRODUCTION_DOMAIN = "micoloniadigital.com";
 export const MONTHLY_PRICE = 259; // MXN, cobro personal de Mario
 export const GRACE_DAYS = 7; // días de gracia tras el vencimiento
-export const MAX_FEATURED = 5; // lugares destacados, solo el admin
+export const MAX_FEATURED = 10; // lugares destacados, solo el admin
 export const OFFICIAL_FACEBOOK =
   "https://www.facebook.com/profile.php?id=61596053321404";
 export const OFFICIAL_INSTAGRAM =
@@ -244,14 +244,54 @@ export function effectivePrice(p: Product, b: Business): number {
   return p.price;
 }
 
+// Zona horaria de los negocios: TODOS están en las colonias de
+// Mario (zona de Guadalajara), así que el «ahora» se calcula
+// SIEMPRE en America/Mexico_City. Antes se usaba la hora del
+// servidor (UTC en Vercel): desde las 6 pm el servidor ya creía
+// que era la madrugada del día siguiente y marcaba «Cerrado» a
+// locales que cierran 21:30 (bug reportado por Mario).
+export const BIZ_TIME_ZONE = "America/Mexico_City";
+const WEEKDAY_INDEX: Record<string, number> = {
+  Mon: 0,
+  Tue: 1,
+  Wed: 2,
+  Thu: 3,
+  Fri: 4,
+  Sat: 5,
+  Sun: 6,
+};
+
+export function coloniaNow(now: Date = new Date()): {
+  minutes: number;
+  dayIndex: number;
+} {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: BIZ_TIME_ZONE,
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(now);
+  let hour = 0;
+  let minute = 0;
+  let dayIndex = 0;
+  for (const part of parts) {
+    if (part.type === "hour") hour = Number(part.value) % 24;
+    else if (part.type === "minute") minute = Number(part.value);
+    else if (part.type === "weekday")
+      dayIndex = WEEKDAY_INDEX[part.value] ?? 0;
+  }
+  return { minutes: hour * 60 + minute, dayIndex };
+}
+
 export function isOpenNow(b: Business, now: Date = new Date()): boolean {
-  const cur = now.getHours() * 60 + now.getMinutes();
+  const { minutes: cur, dayIndex } = coloniaNow(now);
   // Con horario por día manda el día de HOY: si hoy no está
   // marcado, está cerrado aunque los demás días abra.
   let openStr = b.openTime;
   let closeStr = b.closeTime;
   if (b.schedule && b.schedule.length > 0) {
-    const todayName = WEEK_DAYS[(now.getDay() + 6) % 7];
+    const todayName = WEEK_DAYS[dayIndex] ?? "Lunes";
     const today = b.schedule.find((e) => e.day === todayName);
     if (!today) return false;
     openStr = today.open;

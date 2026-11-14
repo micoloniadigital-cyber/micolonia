@@ -10,7 +10,7 @@ Valle Imperial, La Cuchilla y Tesistán — producción para
   panel del administrador.
 - Suscripción de **$259 MXN/mes con cobro personal** del administrador:
   NO hay Mercado Pago ni Stripe. 7 días de gracia tras el vencimiento.
-  Lugares destacados: máximo 5, solo el admin. Cada local prende y
+  Lugares destacados: máximo 10, solo el admin. Cada local prende y
   apaga sus promociones.
 
 ## Cómo desplegar

@@ -2,7 +2,7 @@
 // Esta página (servidor) solo valida la sesión de admin y
 // trae los datos; el DISEÑO y el funcionamiento son los del
 // demo, en components/AdminPanel.tsx: estadísticas, Lugares
-// destacados (máximo 5), filtros, tarjetas de cada local con
+// destacados (máximo 10), filtros, tarjetas de cada local con
 // todos sus botones, gracia de 7 días con aviso por WhatsApp,
 // códigos de correo vigentes, historial de pagos y eliminar
 // locales. Salir de la sesión se hace con «Salir» del

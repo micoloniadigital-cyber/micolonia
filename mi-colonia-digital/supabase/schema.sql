@@ -7,7 +7,7 @@
 -- entran negocios verdaderos que se registren en la página.
 -- Reglas del negocio ya puestas en la base:
 --   · Colonias fijas (las 5 de Mario), precio $259 MXN/mes,
---     7 días de gracia, destacados máximo 5 solo admin.
+--     7 días de gracia, destacados máximo 10 solo admin.
 --   · SIN Mercado Pago y SIN Stripe: el pago se registra a
 --     mano cuando Mario cobra en persona (tabla payments).
 -- ============================================================
@@ -54,7 +54,7 @@ create table if not exists public.businesses (
   email_verified boolean not null default false,
   accent text not null default '#EA580C',
   rating numeric(3,2) not null default 0,
-  -- Lugares destacados: máximo 5 en total, solo el admin (la
+  -- Lugares destacados: máximo 10 en total, solo el admin (la
   -- regla del máximo se hace cumplir en el servidor y con el
   -- trigger de abajo).
   featured boolean not null default false,
@@ -87,13 +87,13 @@ create index if not exists businesses_status_idx on public.businesses (status);
 create index if not exists businesses_featured_idx
   on public.businesses (featured) where featured = true;
 
--- Regla dura: nunca más de 5 lugares destacados.
+-- Regla dura: nunca más de 10 lugares destacados.
 create or replace function public.enforce_max_featured()
 returns trigger language plpgsql as $$
 begin
   if new.featured = true and (tg_op = 'INSERT' or old.featured = false) then
-    if (select count(*) from public.businesses where featured = true) >= 5 then
-      raise exception 'Solo puede haber 5 lugares destacados. Quita uno primero.';
+    if (select count(*) from public.businesses where featured = true) >= 10 then
+      raise exception 'Solo puede haber 10 lugares destacados. Quita uno primero.';
     end if;
   end if;
   return new;

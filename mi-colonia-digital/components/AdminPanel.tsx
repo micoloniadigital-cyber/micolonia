@@ -2,7 +2,7 @@
 // EXACTAMENTE como el del demo: mismo encabezado y caja
 // naranja «¿Cómo funciona tu cobro?», las 5 tarjetas de
 // estadísticas con sus iconos, la sección ámbar de Lugares
-// destacados (máximo 5, solo el admin), los filtros
+// destacados (máximo 10, solo el admin), los filtros
 // Todos/Activos/Inactivos, las tarjetas de cada local con
 // TODOS sus botones e insignias (activar/desactivar,
 // registrar pago $259, avisar por WhatsApp en la gracia,
