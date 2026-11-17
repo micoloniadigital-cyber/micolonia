@@ -7,7 +7,9 @@
 // hay sesión (la lee el layout en el servidor y la pasa como
 // prop), a la derecha se ve «Panel admin» o «Mi panel» más
 // «Salir» — la sesión persiste al navegar porque vive en la
-// cookie firmada, y «Salir» la cierra en el servidor.
+// cookie firmada, y «Salir» la cierra en el servidor. Si Mario
+// entró como un negocio (sesión de comerciante con origen
+// "admin"), en vez de «Mi panel» se ve «← Volver a admin».
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
@@ -17,7 +19,7 @@ import { LOGO_URL } from "../lib/fotos";
 import { CART_EVENT, cartCount } from "../lib/carrito";
 import { COLONIAS } from "../lib/plataforma";
 import { abrirLogin } from "./LoginModal";
-import { salir } from "../app/ingresar/actions";
+import { salir, volverAAdmin } from "../app/ingresar/actions";
 import type { Sesion } from "../lib/sesion";
 
 export default function Header({ sesion }: { sesion: Sesion | null }) {
@@ -117,12 +119,20 @@ export default function Header({ sesion }: { sesion: Sesion | null }) {
           </Link>
           {sesion ? (
             <>
-              <Link
-                href={sesion.rol === "admin" ? "/admin" : "/panel"}
-                className="rounded-full px-3 py-2 text-sm font-semibold hover:bg-[var(--accent-soft)]"
-              >
-                {sesion.rol === "admin" ? "Panel admin" : "Mi panel"}
-              </Link>
+              {sesion.rol === "comerciante" && sesion.origen === "admin" ? (
+                <form action={volverAAdmin}>
+                  <button type="submit" className="rounded-full px-3 py-2 text-sm font-semibold hover:bg-[var(--accent-soft)]">
+                    ← Volver a admin
+                  </button>
+                </form>
+              ) : (
+                <Link
+                  href={sesion.rol === "admin" ? "/admin" : "/panel"}
+                  className="rounded-full px-3 py-2 text-sm font-semibold hover:bg-[var(--accent-soft)]"
+                >
+                  {sesion.rol === "admin" ? "Panel admin" : "Mi panel"}
+                </Link>
+              )}
               <form action={salir}>
                 <button type="submit" className="rounded-full px-3 py-2 text-sm font-semibold text-[var(--dim)] hover:bg-[var(--surface-alt)]">
                   Salir
@@ -162,12 +172,23 @@ export default function Header({ sesion }: { sesion: Sesion | null }) {
           Publica tu negocio
         </Link>
         {sesion ? (
-          <Link
-            href={sesion.rol === "admin" ? "/admin" : "/panel"}
-            className="rounded-full bg-[var(--surface)] px-3 py-2 text-sm font-semibold ring-1 ring-[var(--border)]"
-          >
-            {sesion.rol === "admin" ? "Admin" : "Mi panel"}
-          </Link>
+          sesion.rol === "comerciante" && sesion.origen === "admin" ? (
+            <form action={volverAAdmin}>
+              <button
+                type="submit"
+                className="rounded-full bg-[var(--surface)] px-3 py-2 text-sm font-semibold ring-1 ring-[var(--border)]"
+              >
+                ← Admin
+              </button>
+            </form>
+          ) : (
+            <Link
+              href={sesion.rol === "admin" ? "/admin" : "/panel"}
+              className="rounded-full bg-[var(--surface)] px-3 py-2 text-sm font-semibold ring-1 ring-[var(--border)]"
+            >
+              {sesion.rol === "admin" ? "Admin" : "Mi panel"}
+            </Link>
+          )
         ) : (
           <button
             type="button"

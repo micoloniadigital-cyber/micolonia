@@ -5,7 +5,9 @@
 // verificado, el popup pide el código de 6 dígitos ahí mismo
 // (sin código no hay panel). Administrador: su correo y
 // contraseña viven SOLO en las variables del servidor de
-// Vercel (ADMIN_EMAIL y ADMIN_PASSWORD).
+// Vercel (ADMIN_EMAIL y ADMIN_PASSWORD). También vive aquí
+// volverAAdmin: el regreso de Mario a su panel cuando entró
+// como un negocio para ayudarle (solo con origen "admin").
 "use server";
 
 import { redirect } from "next/navigation";
@@ -16,7 +18,7 @@ import {
   verifyPassword,
 } from "../../lib/auth";
 import { enviarCodigoPorCorreo } from "../../lib/correo";
-import { crearSesion, cerrarSesion } from "../../lib/sesion";
+import { crearSesion, cerrarSesion, leerSesion } from "../../lib/sesion";
 import { supabaseServer } from "../../lib/supabase-server";
 
 export interface LoginState {
@@ -185,6 +187,21 @@ export async function reenviarCodigoLogin(
     biz.data ? String((biz.data as { name: string }).name) : "tu negocio",
   );
   return { ...base, codeNotice: "Te enviamos un código nuevo a " + email + " 📧" };
+}
+
+// «← Volver a admin»: SOLO funciona si la sesión actual es de
+// comerciante con origen "admin" (Mario entró como un negocio
+// desde su panel para ayudarle). Un comerciante normal nunca
+// trae origen en su sesión, así que jamás puede volverse admin
+// con esto; y la cookie va firmada con HMAC, así que tampoco
+// puede falsificar el origen.
+export async function volverAAdmin(): Promise<void> {
+  const s = await leerSesion();
+  if (!s || s.rol !== "comerciante" || s.origen !== "admin") {
+    redirect("/");
+  }
+  await crearSesion({ rol: "admin", businessId: null });
+  redirect("/admin");
 }
 
 export async function salir(): Promise<void> {

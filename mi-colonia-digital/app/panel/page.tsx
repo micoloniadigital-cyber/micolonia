@@ -2,9 +2,12 @@
 // (suscripción, vencimiento, gracia de 7 días, visitas, clics
 // de WhatsApp), datos del negocio, logo y portada, productos
 // ilimitados con precio promocional, el interruptor «Mis
-// promociones activas» y cambio de contraseña.
+// promociones activas» y cambio de contraseña. Si la sesión
+// trae origen "admin" (Mario entró como este negocio para
+// ayudarle), arriba se muestra el aviso y el botón para
+// volver a su panel de admin.
 import { redirect } from "next/navigation";
-import { salir } from "../ingresar/actions";
+import { salir, volverAAdmin } from "../ingresar/actions";
 import {
   actualizarNegocio,
   cambiarCitas,
@@ -72,6 +75,19 @@ export default async function PanelPage() {
   return (
     <main>
       <h1>Mi panel — {b.name}</h1>
+      {sesion.origen === "admin" ? (
+        <div className="aviso" role="status">
+          <p>
+            👤 Estás entrando como «{b.name}» para ayudarle: lo que subas o
+            cambies aquí queda guardado en su cuenta.
+          </p>
+          <form action={volverAAdmin}>
+            <button type="submit" className="boton boton-tenue">
+              ← Volver a mi panel de admin
+            </button>
+          </form>
+        </div>
+      ) : null}
       <p className="tenue">
         Tu escaparate: {SITE_URL}/negocio/{b.slug} · Estado:{" "}
         <strong>{b.status}</strong>

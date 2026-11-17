@@ -7,16 +7,20 @@
 // TODOS sus botones e insignias (activar/desactivar,
 // registrar pago $259, avisar por WhatsApp en la gracia,
 // fecha de vencimiento, estado, suscripción, destacar,
-// eliminar con confirmación en dos pasos), el historial de
-// pagos por local y la lista global de pagos. Los datos los
-// trae la página del servidor (app/admin/page.tsx) y cada
-// botón llama a las acciones del servidor de app/admin.
+// eliminar con confirmación en dos pasos y «Entrar como
+// este negocio» — un form directo a la acción del servidor,
+// sin el helper run(), para que el redirect a /panel funcione
+// tal cual), el historial de pagos por local y la lista
+// global de pagos. Los datos los trae la página del servidor
+// (app/admin/page.tsx) y cada botón llama a las acciones del
+// servidor de app/admin.
 "use client";
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   adminEliminarNegocio,
+  adminEntrarComoNegocio,
   adminRegistrarPago,
   adminSetDestacado,
   adminSetEstado,
@@ -356,7 +360,11 @@ export default function AdminPanel({
           <strong>la fecha límite del periodo de gracia de 7 días</strong> y
           su historial de pagos. Usa «Registrar pago» cuando recibas los $259
           en persona, y «Eliminar local» para borrar un negocio para siempre
-          (con confirmación).
+          (con confirmación). Con{" "}
+          <strong>«Entrar como este negocio»</strong> entras directo a su
+          panel para ayudarle a subir productos o fotos, sin pedirle su
+          contraseña (las contraseñas no se pueden ver: se guardan revueltas
+          y nadie puede leerlas, ni siquiera tú).
         </p>
         <ul className="mt-4 space-y-4">
           {shownBiz.map((b) => {
@@ -568,6 +576,16 @@ export default function AdminPanel({
                   >
                     💵 Registrar pago $259 y activar
                   </button>
+                  <form action={adminEntrarComoNegocio}>
+                    <input type="hidden" name="id" value={String(b.id)} />
+                    <button
+                      type="submit"
+                      aria-label={"Entrar como " + b.name + " para ayudarle a subir contenido"}
+                      className="rounded-full bg-white px-3.5 py-2 text-sm font-bold ring-1 ring-[var(--border)]"
+                    >
+                      👤 Entrar como este negocio
+                    </button>
+                  </form>
                   {expired && (b.whatsapp || b.phone) ? (
                     <a
                       href={waLink(

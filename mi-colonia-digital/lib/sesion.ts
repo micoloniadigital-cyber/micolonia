@@ -3,11 +3,17 @@
 // Roles: "admin" (Mario) y "comerciante" (su propio negocio).
 // Cada acción del servidor revisa la sesión antes de escribir:
 // un comerciante jamás toca otro negocio.
+// «origen: "admin"» SOLO se pone cuando Mario entra como un
+// negocio desde su panel (adminEntrarComoNegocio): le permite
+// volver a admin con volverAAdmin. El login normal de
+// comerciante nunca lo pone, y como la cookie va firmada con
+// HMAC, un comerciante no puede falsificarlo.
 import { cookies } from "next/headers";
 
 export interface Sesion {
   rol: "admin" | "comerciante";
   businessId: number | null;
+  origen?: "admin";
 }
 
 const COOKIE = "mcd_sesion";

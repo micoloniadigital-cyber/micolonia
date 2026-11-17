@@ -2,12 +2,17 @@
 // Todas validan la sesión de admin en el servidor: activar/
 // suspender locales, destacar hasta 10 lugares, registrar el
 // cobro personal de $259 (activa y mueve el vencimiento),
-// eliminar locales y salir.
+// eliminar locales, salir y «Entrar como este negocio»
+// (adminEntrarComoNegocio: Mario entra directo al panel de un
+// negocio para ayudarle a subir contenido, SIN ver ni pedir su
+// contraseña — las contraseñas se guardan solo como hash y
+// nadie puede leerlas).
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { MAX_FEATURED, MONTHLY_PRICE } from "../../lib/plataforma";
-import { leerSesion } from "../../lib/sesion";
+import { crearSesion, leerSesion } from "../../lib/sesion";
 import { supabaseServer } from "../../lib/supabase-server";
 
 async function soloAdmin(): Promise<void> {
@@ -134,4 +139,25 @@ export async function adminEliminarNegocio(fd: FormData): Promise<void> {
   await db.from("email_verifications").delete().eq("business_id", id);
   await db.from("businesses").delete().eq("id", id);
   revalidatePath("/admin");
+}
+
+// «Entrar como este negocio»: SOLO el admin (soloAdmin() va
+// primero, en el servidor; nunca se confía en el navegador).
+// Cambia la sesión a la de ese comerciante, marcada con
+// origen "admin" para poder volver con volverAAdmin, y manda
+// directo a su panel. No lee ni muestra ninguna contraseña:
+// no hace falta, la sesión se crea en el servidor.
+export async function adminEntrarComoNegocio(fd: FormData): Promise<void> {
+  await soloAdmin();
+  const id = Number(campo(fd, "id"));
+  if (!id) throw new Error("Negocio no válido.");
+  const db = supabaseServer();
+  const fila = await db
+    .from("businesses")
+    .select("id")
+    .eq("id", id)
+    .maybeSingle();
+  if (!fila.data) throw new Error("Ese negocio ya no existe.");
+  await crearSesion({ rol: "comerciante", businessId: id, origen: "admin" });
+  redirect("/panel");
 }
