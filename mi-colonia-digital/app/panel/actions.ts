@@ -5,7 +5,12 @@
 
 import { revalidatePath } from "next/cache";
 import { hashPassword } from "../../lib/auth";
-import { STORAGE_BUCKET, validarScheduleJson } from "../../lib/plataforma";
+import { getCitasAceptadas, mapCita } from "../../lib/catalogo";
+import {
+  CITA_CATEGORIA,
+  STORAGE_BUCKET,
+  validarScheduleJson,
+} from "../../lib/plataforma";
 import { leerSesion } from "../../lib/sesion";
 import { supabaseServer } from "../../lib/supabase-server";
 
@@ -102,6 +107,71 @@ export async function cambiarPromociones(fd: FormData): Promise<void> {
     .from("businesses")
     .update({ promotions_active: fd.get("activas") === "on" })
     .eq("id", businessId);
+  revalidatePath("/panel");
+}
+
+// ---------- Citas de Belleza ----------
+// «¿Aceptas citas?» Sí/No: SOLO negocios de categoría Belleza.
+// Prendido, el escaparate muestra el calendario de reserva
+// (components/ReservarCita); apagado, el calendario desaparece
+// y las citas ya registradas se conservan.
+export async function cambiarCitas(fd: FormData): Promise<void> {
+  const businessId = await miNegocioId();
+  const db = supabaseServer();
+  const fila = await db
+    .from("businesses")
+    .select("category")
+    .eq("id", businessId)
+    .maybeSingle();
+  const categoria = fila.data
+    ? String((fila.data as Record<string, unknown>)["category"] || "")
+    : "";
+  if (categoria !== CITA_CATEGORIA) {
+    throw new Error("Las citas solo están disponibles para negocios de Belleza.");
+  }
+  await db
+    .from("businesses")
+    .update({ acepta_citas: fd.get("acepta") === "on" })
+    .eq("id", businessId);
+  revalidatePath("/panel");
+}
+
+// Aceptar o rechazar una cita pendiente del PROPIO negocio. Al
+// aceptar se verifica que NO exista ya otra cita aceptada de
+// este negocio en esa fecha y hora; si existe, no se acepta.
+// Al rechazar, la hora sigue libre (las pendientes no bloquean).
+export async function responderCita(fd: FormData): Promise<void> {
+  const businessId = await miNegocioId();
+  const citaId = Number(campo(fd, "id"));
+  const decision = campo(fd, "decision");
+  if (decision !== "aceptada" && decision !== "rechazada") {
+    throw new Error("Decisión de cita no válida.");
+  }
+  const db = supabaseServer();
+  const fila = await db
+    .from("citas")
+    .select("*")
+    .eq("id", citaId)
+    .eq("business_id", businessId)
+    .maybeSingle();
+  if (!fila.data) throw new Error("Esa cita no pertenece a tu negocio.");
+  const cita = mapCita(fila.data as Record<string, unknown>);
+  if (cita.estado !== "pendiente") {
+    throw new Error("Esa cita ya fue respondida.");
+  }
+  if (decision === "aceptada") {
+    const aceptadas = await getCitasAceptadas(businessId);
+    if (
+      aceptadas.some(
+        (c) => c.id !== cita.id && c.fecha === cita.fecha && c.hora === cita.hora,
+      )
+    ) {
+      throw new Error(
+        "Ya hay otra cita aceptada en esa fecha y hora. Rechaza esta solicitud o acuerda otra hora con el cliente por teléfono.",
+      );
+    }
+  }
+  await db.from("citas").update({ estado: decision }).eq("id", cita.id);
   revalidatePath("/panel");
 }
 

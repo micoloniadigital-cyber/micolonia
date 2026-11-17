@@ -7,6 +7,7 @@ import {
   MAX_FEATURED,
   parseSchedule,
   type Business,
+  type Cita,
   type Product,
 } from "./plataforma";
 
@@ -62,6 +63,7 @@ export function mapBusiness(f: Fila): Business {
     rating: numero(f, "rating"),
     featured: f["featured"] === true,
     promotionsActive: f["promotions_active"] !== false,
+    aceptaCitas: f["acepta_citas"] === true,
     status: (texto(f, "status") || "pendiente") as Business["status"],
     subscriptionStatus: (texto(f, "subscription_status") ||
       "pendiente_pago") as Business["subscriptionStatus"],
@@ -126,6 +128,51 @@ export async function getBusinessBySlug(
     .eq("status", "activo")
     .single();
   return res.data ? mapBusiness(res.data as Fila) : null;
+}
+
+export function mapCita(f: Fila): Cita {
+  return {
+    id: numero(f, "id"),
+    businessId: numero(f, "business_id"),
+    nombre: texto(f, "nombre"),
+    telefono: texto(f, "telefono"),
+    fecha: fecha(f, "fecha"),
+    hora: hora(f, "hora", ""),
+    estado: (texto(f, "estado") || "pendiente") as Cita["estado"],
+    createdAt: texto(f, "created_at"),
+  };
+}
+
+// Citas ACEPTADAS de un negocio: es lo que el calendario de
+// reserva muestra como «Apartado». Se leen SOLO en el servidor
+// con la clave secreta; la tabla citas está cerrada al público
+// y a la página pública solo se le pasan fecha y hora (la vista
+// citas_apartadas expone lo mismo, sin datos personales).
+export async function getCitasAceptadas(businessId: number): Promise<Cita[]> {
+  const db = supabaseServer();
+  const res = await db
+    .from("citas")
+    .select("*")
+    .eq("business_id", businessId)
+    .eq("estado", "aceptada")
+    .order("fecha", { ascending: true })
+    .order("hora", { ascending: true });
+  return ((res.data || []) as Fila[]).map(mapCita);
+}
+
+// TODAS las citas de un negocio (pendientes, aceptadas y
+// rechazadas, con nombre y teléfono): solo para el panel del
+// dueño, que las ve y las responde ahí.
+export async function getCitasNegocio(businessId: number): Promise<Cita[]> {
+  const db = supabaseServer();
+  const res = await db
+    .from("citas")
+    .select("*")
+    .eq("business_id", businessId)
+    .order("fecha", { ascending: true })
+    .order("hora", { ascending: true })
+    .order("id", { ascending: true });
+  return ((res.data || []) as Fila[]).map(mapCita);
 }
 
 // Contador REAL de visitas a la portada: vive en

@@ -60,6 +60,10 @@ create table if not exists public.businesses (
   featured boolean not null default false,
   -- Promociones activas: el comerciante las prende y apaga.
   promotions_active boolean not null default true,
+  -- Citas (solo categoría Belleza): el comerciante prende/apaga
+  -- «¿Aceptas citas?» desde su panel. Prendido, su escaparate
+  -- muestra el calendario de reserva (tabla citas).
+  acepta_citas boolean not null default false,
   status text not null default 'pendiente'
     check (status in ('activo', 'pendiente', 'suspendido')),
   subscription_status text not null default 'pendiente_pago'
@@ -78,6 +82,11 @@ create table if not exists public.businesses (
 -- horario), esta línea agrega la columna sin tocar nada más.
 alter table public.businesses
   add column if not exists schedule jsonb not null default '[]'::jsonb;
+
+-- Si la tabla ya existía (proyecto creado antes de las citas de
+-- Belleza), esta línea agrega la columna sin tocar nada más.
+alter table public.businesses
+  add column if not exists acepta_citas boolean not null default false;
 
 create unique index if not exists businesses_owner_email_idx
   on public.businesses (lower(owner_email));
@@ -125,6 +134,30 @@ create table if not exists public.products (
 create index if not exists products_business_idx on public.products (business_id);
 create index if not exists products_promo_idx
   on public.products (promo_price) where promo_price is not null;
+
+-- ---------- Citas de Belleza ----------
+-- Solo negocios de categoría Belleza con acepta_citas = true.
+-- El vecino pide con nombre, teléfono, fecha y hora (bloques de
+-- 1 hora dentro del horario de ese día, hasta 30 días adelante).
+-- La cita nace «pendiente» y NO aparta la hora: solo cuando el
+-- dueño la acepta («aceptada») esa fecha y hora se ven Apartada
+-- para los demás; si la rechaza («rechazada»), la hora sigue
+-- libre. Sin notificaciones por WhatsApp en esta versión: el
+-- dueño ve y responde las solicitudes en su panel.
+create table if not exists public.citas (
+  id bigint generated always as identity primary key,
+  business_id bigint not null references public.businesses(id) on delete cascade,
+  nombre text not null default '',
+  telefono text not null default '',
+  fecha date not null,
+  hora time not null,
+  estado text not null default 'pendiente'
+    check (estado in ('pendiente', 'aceptada', 'rechazada')),
+  created_at timestamptz not null default now()
+);
+create index if not exists citas_business_idx on public.citas (business_id);
+create index if not exists citas_business_fecha_idx
+  on public.citas (business_id, fecha, hora);
 
 -- ---------- Códigos de verificación por correo ----------
 -- Al registrarse, cada negocio recibe un código de 6 dígitos
@@ -198,6 +231,7 @@ create trigger products_touch before update on public.products
 -- ---------- Seguridad a nivel de fila (RLS) ----------
 alter table public.businesses enable row level security;
 alter table public.products enable row level security;
+alter table public.citas enable row level security;
 alter table public.email_verifications enable row level security;
 alter table public.payments enable row level security;
 alter table public.platform_config enable row level security;
@@ -216,6 +250,19 @@ create policy "productos disponibles visibles" on public.products
       where b.id = business_id and b.status = 'activo'
     )
   );
+-- Citas: la tabla queda CERRADA al público (sin policy de
+-- lectura para anon/authenticated): nombres y teléfonos de los
+-- clientes jamás salen de la tabla. El calendario público solo
+-- necesita saber qué fecha y hora están apartadas, y eso se
+-- expone en esta VISTA que trae únicamente business_id, fecha
+-- y hora de las citas ACEPTADAS — sin nombres ni teléfonos.
+-- La app además lee las citas solo en el servidor (clave
+-- secreta) y a la página pública le pasa solo fecha y hora.
+create or replace view public.citas_apartadas as
+  select business_id, fecha, hora
+  from public.citas
+  where estado = 'aceptada';
+grant select on public.citas_apartadas to anon, authenticated;
 -- Sin políticas de escritura para anon/authenticated:
 -- nadie escribe desde el navegador directo a las tablas.
 -- platform_config, payments y email_verifications quedan

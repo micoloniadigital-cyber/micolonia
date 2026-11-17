@@ -19,7 +19,8 @@ import {
   TikTokIcon,
   WhatsAppIcon,
 } from "../../../components/SocialIcons";
-import { getBusinessBySlug, getCatalog } from "../../../lib/catalogo";
+import ReservarCita from "../../../components/ReservarCita";
+import { getBusinessBySlug, getCatalog, getCitasAceptadas } from "../../../lib/catalogo";
 import { businessWhatsappLink } from "../../../lib/carrito";
 import { fotoDeNegocio } from "../../../lib/fotos";
 import { SITE_URL, type Business } from "../../../lib/plataforma";
@@ -56,6 +57,16 @@ export default async function NegocioPage({
   const negocio = b as Business;
   const { products } = await getCatalog();
   const mine = products.filter((p) => p.businessId === negocio.id);
+  // Citas: solo Belleza con «¿Aceptas citas?» prendido muestra el
+  // calendario. A la página pública SOLO viajan fecha y hora de
+  // las aceptadas (para pintar «Apartado»): nombres y teléfonos
+  // de los clientes nunca salen del servidor.
+  const citasAceptadas = negocio.aceptaCitas
+    ? (await getCitasAceptadas(negocio.id)).map((c) => ({
+        fecha: c.fecha,
+        hora: c.hora,
+      }))
+    : [];
   const pageUrl = SITE_URL + "/negocio/" + negocio.slug;
   const mapsHref =
     negocio.mapsUrl ||
@@ -214,6 +225,10 @@ export default async function NegocioPage({
       </section>
 
       <ProductosNegocio b={negocio} products={mine} />
+
+      {negocio.aceptaCitas ? (
+        <ReservarCita b={negocio} aceptadas={citasAceptadas} />
+      ) : null}
 
       <a
         href={waHref}

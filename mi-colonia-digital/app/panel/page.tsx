@@ -7,14 +7,16 @@ import { redirect } from "next/navigation";
 import { salir } from "../ingresar/actions";
 import {
   actualizarNegocio,
+  cambiarCitas,
   cambiarContrasena,
   cambiarPromociones,
   eliminarProducto,
   guardarProducto,
+  responderCita,
 } from "./actions";
 import HorarioChecklist from "../../components/HorarioChecklist";
 import SubirFotoForm from "../../components/SubirFotoForm";
-import { mapBusiness, mapProduct } from "../../lib/catalogo";
+import { getCitasNegocio, mapBusiness, mapProduct } from "../../lib/catalogo";
 import {
   CATEGORIES,
   COLONIAS,
@@ -22,6 +24,7 @@ import {
   MONTHLY_PRICE,
   SITE_URL,
   graceEndDate,
+  hoyEnColonia,
   money,
   subscriptionState,
 } from "../../lib/plataforma";
@@ -50,6 +53,21 @@ export default async function PanelPage() {
   const estado = subscriptionState(b);
   const gracia = graceEndDate(b);
   const promos = products.filter((p) => p.promoPrice != null);
+  // Citas: SOLO negocios de Belleza ven esta sección.
+  const esBelleza = b.category === "Belleza";
+  const citas = esBelleza ? await getCitasNegocio(b.id) : [];
+  const hoy = hoyEnColonia();
+  const citasPendientes = citas.filter((c) => c.estado === "pendiente");
+  const citasProximas = citas.filter(
+    (c) => c.estado === "aceptada" && c.fecha >= hoy,
+  );
+  const fechaCita = (fecha: string) =>
+    new Intl.DateTimeFormat("es-MX", {
+      timeZone: "UTC",
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    }).format(new Date(fecha + "T12:00:00Z"));
 
   return (
     <main>
@@ -117,6 +135,92 @@ export default async function PanelPage() {
           </p>
         )}
       </section>
+
+      {esBelleza ? (
+        <section className="panel-seccion" aria-label="Mis citas">
+          <h2>Mis citas</h2>
+          <p>
+            Tu negocio es de <strong>Belleza</strong>: puedes recibir citas
+            por tu escaparate. Si prendes «¿Aceptas citas?», en tu página
+            aparece el calendario donde los vecinos eligen día y hora (citas
+            de 1 hora, dentro de tu horario, hasta con 30 días de
+            anticipación) y dejan su nombre y teléfono. Cada solicitud llega
+            aquí como <strong>pendiente</strong> y <strong>no aparta la
+            hora</strong>: solo cuando la aceptas, esa fecha y hora se ven
+            «Apartado» para los demás. Si la rechazas, la hora sigue libre.
+            En esta versión no hay avisos por WhatsApp: revisa esta sección
+            para responder tus solicitudes.
+          </p>
+          <form action={cambiarCitas}>
+            <label>
+              <input type="checkbox" name="acepta" defaultChecked={b.aceptaCitas} />{" "}
+              ¿Aceptas citas? {b.aceptaCitas ? "SÍ" : "NO"}
+            </label>{" "}
+            <button type="submit" className="boton">Guardar</button>
+          </form>
+          {b.aceptaCitas ? (
+            <p>
+              Tu calendario de citas está visible en tu escaparate: los
+              vecinos ya pueden pedirte cita.
+            </p>
+          ) : (
+            <p className="tenue">
+              Tus citas están apagadas: no se ve ningún calendario en tu
+              página. Al prenderlo y guardar, aparece el calendario en tu
+              escaparate y los vecinos pueden agendar.
+            </p>
+          )}
+
+          <h3>Solicitudes pendientes ({citasPendientes.length})</h3>
+          {citasPendientes.length === 0 ? (
+            <p className="tenue">
+              No tienes solicitudes pendientes. Cuando un vecino pida una
+              cita, aparecerá aquí con su nombre, teléfono, fecha y hora.
+            </p>
+          ) : (
+            <ul>
+              {citasPendientes.map((c) => (
+                <li key={c.id}>
+                  <strong>{c.nombre}</strong> · {c.telefono} ·{" "}
+                  {fechaCita(c.fecha)} · {c.hora} (1 hora){" "}
+                  <form action={responderCita} style={{ display: "inline" }}>
+                    <input type="hidden" name="id" value={c.id} />
+                    <input type="hidden" name="decision" value="aceptada" />
+                    <button type="submit" className="boton" aria-label={"Aceptar la cita de " + c.nombre}>
+                      Aceptar
+                    </button>
+                  </form>{" "}
+                  <form action={responderCita} style={{ display: "inline" }}>
+                    <input type="hidden" name="id" value={c.id} />
+                    <input type="hidden" name="decision" value="rechazada" />
+                    <button type="submit" className="boton boton-tenue" aria-label={"Rechazar la cita de " + c.nombre}>
+                      Rechazar
+                    </button>
+                  </form>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <h3>Citas aceptadas próximas ({citasProximas.length})</h3>
+          {citasProximas.length === 0 ? (
+            <p className="tenue">
+              Todavía no tienes citas aceptadas próximas. Las que aceptes se
+              apartan en tu calendario y se ven «Apartado» para los demás
+              vecinos.
+            </p>
+          ) : (
+            <ul>
+              {citasProximas.map((c) => (
+                <li key={c.id}>
+                  <strong>{c.nombre}</strong> · {c.telefono} ·{" "}
+                  {fechaCita(c.fecha)} · {c.hora} · Apartado
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      ) : null}
 
       <section className="panel-seccion" aria-label="Datos de mi negocio">
         <h2>Datos de mi negocio</h2>

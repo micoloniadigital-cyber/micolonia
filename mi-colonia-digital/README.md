@@ -12,6 +12,11 @@ Valle Imperial, La Cuchilla y Tesistán — producción para
   NO hay Mercado Pago ni Stripe. 7 días de gracia tras el vencimiento.
   Lugares destacados: máximo 10, solo el admin. Cada local prende y
   apaga sus promociones.
+- Citas para negocios de **Belleza**: el comerciante prende «¿Aceptas
+  citas?» en su panel y su escaparate muestra el calendario de
+  reserva (citas de 1 hora dentro del horario, hasta 30 días). La
+  cita nace pendiente y solo aparta la hora cuando el dueño la
+  acepta en su panel; sin avisos por WhatsApp en esta versión.
 
 ## Cómo desplegar
 

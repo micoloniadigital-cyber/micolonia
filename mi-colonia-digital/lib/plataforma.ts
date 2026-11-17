@@ -8,6 +8,15 @@ export const PRODUCTION_DOMAIN = "micoloniadigital.com";
 export const MONTHLY_PRICE = 259; // MXN, cobro personal de Mario
 export const GRACE_DAYS = 7; // días de gracia tras el vencimiento
 export const MAX_FEATURED = 10; // lugares destacados, solo el admin
+// Citas de Belleza: solo negocios de categoría Belleza pueden
+// prender «¿Aceptas citas?». Cada cita dura 1 hora, dentro del
+// horario en que el negocio abre ese día, y se puede pedir hasta
+// con 30 días de anticipación. La cita nace «pendiente» y NO
+// aparta la hora: solo al aceptarla el dueño esa fecha y hora se
+// ven Apartada para los demás.
+export const CITA_DURACION_MIN = 60;
+export const CITA_ANTICIPACION_DIAS = 30;
+export const CITA_CATEGORIA = "Belleza";
 export const OFFICIAL_FACEBOOK =
   "https://www.facebook.com/profile.php?id=61596053321404";
 export const OFFICIAL_INSTAGRAM =
@@ -183,6 +192,7 @@ export interface Business {
   rating: number;
   featured: boolean;
   promotionsActive: boolean;
+  aceptaCitas: boolean; // solo Belleza: calendario de citas prendido
   status: BusinessStatus;
   subscriptionStatus: SubscriptionStatus;
   nextPaymentDate: string; // "2026-12-06" o ""
@@ -204,6 +214,19 @@ export interface Product {
   available: boolean;
   featured: boolean;
   views: number;
+}
+
+export type CitaEstado = "pendiente" | "aceptada" | "rechazada";
+
+export interface Cita {
+  id: number;
+  businessId: number;
+  nombre: string;
+  telefono: string;
+  fecha: string; // "2026-11-21" (YYYY-MM-DD)
+  hora: string; // "11:00" (HH:MM, inicio del bloque de 1 hora)
+  estado: CitaEstado;
+  createdAt: string;
 }
 
 export interface Payment {
@@ -303,6 +326,92 @@ export function isOpenNow(b: Business, now: Date = new Date()): boolean {
   const close = (parts2[0] || 21) * 60 + (parts2[1] || 0);
   if (close <= open) return cur >= open || cur < close; // cierra de madrugada
   return cur >= open && cur < close;
+}
+
+// ---------- Citas de Belleza: fechas y horas disponibles ----------
+// Las fechas viajan como texto YYYY-MM-DD y las horas como HH:MM.
+// «Hoy» es siempre el día de America/Mexico_City, nunca el del
+// servidor ni el del aparato del visitante.
+
+// Hoy (YYYY-MM-DD) en la zona de los negocios.
+export function hoyEnColonia(now: Date = new Date()): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: BIZ_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now);
+  let y = "1970";
+  let m = "01";
+  let d = "01";
+  for (const p of parts) {
+    if (p.type === "year") y = p.value;
+    else if (p.type === "month") m = p.value;
+    else if (p.type === "day") d = p.value;
+  }
+  return y + "-" + m + "-" + d;
+}
+
+export function sumarDiasISO(fecha: string, dias: number): string {
+  const d = new Date(fecha + "T12:00:00Z");
+  d.setUTCDate(d.getUTCDate() + dias);
+  return d.toISOString().slice(0, 10);
+}
+
+// Nombre del día (Lunes…Domingo) de una fecha YYYY-MM-DD.
+export function nombreDiaDeFecha(fecha: string): string {
+  const d = new Date(fecha + "T12:00:00Z");
+  return WEEK_DAYS[(d.getUTCDay() + 6) % 7] || "Lunes";
+}
+
+// Horario de UN día concreto: con horario por día (schedule)
+// manda la entrada de ese día y si el día no está marcado el
+// negocio NO abre (null). Sin schedule, openTime/closeTime.
+export function horarioDelDia(
+  b: Business,
+  fecha: string,
+): { open: string; close: string } | null {
+  if (b.schedule && b.schedule.length > 0) {
+    const e = b.schedule.find((x) => x.day === nombreDiaDeFecha(fecha));
+    return e ? { open: e.open, close: e.close } : null;
+  }
+  return { open: b.openTime, close: b.closeTime };
+}
+
+// Horas (HH:MM) en que puede empezar una cita de 1 hora ese día:
+// todas las que caben dentro del horario del día, EXCLUYENDO las
+// que ya tienen una cita ACEPTADA. Solo días de hoy en adelante y
+// solo días en que el negocio abre; las citas pendientes NO
+// bloquean la hora. Si la fecha es HOY, también se excluyen las
+// horas que ya pasaron (hora de México). «aceptadas» solo necesita
+// fecha y hora a propósito: nombres y teléfonos de los clientes
+// NUNCA viajan a la página pública, solo al panel del dueño.
+export function horasDisponibles(
+  b: Business,
+  fecha: string,
+  aceptadas: Pick<Cita, "fecha" | "hora">[],
+): string[] {
+  if (fecha < hoyEnColonia()) return [];
+  const hours = horarioDelDia(b, fecha);
+  if (!hours) return [];
+  const op = hours.open.split(":").map(Number);
+  const cl = hours.close.split(":").map(Number);
+  const open = (op[0] || 9) * 60 + (op[1] || 0);
+  const close = (cl[0] || 21) * 60 + (cl[1] || 0);
+  const taken = new Set(
+    aceptadas.filter((c) => c.fecha === fecha).map((c) => c.hora),
+  );
+  const nowMin = fecha === hoyEnColonia() ? coloniaNow().minutes : -1;
+  const out: string[] = [];
+  for (let t = open; t + CITA_DURACION_MIN <= close; t += CITA_DURACION_MIN) {
+    if (t <= nowMin) continue; // hoy: esa hora ya pasó
+    const slot =
+      String(Math.floor(t / 60)).padStart(2, "0") +
+      ":" +
+      String(t % 60).padStart(2, "0");
+    if (!taken.has(slot)) out.push(slot);
+  }
+  return out;
 }
 
 // Fin del periodo de gracia: vencimiento + 7 días.
